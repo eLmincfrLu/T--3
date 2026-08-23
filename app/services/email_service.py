@@ -7,7 +7,7 @@ from sib_api_v3_sdk.rest import ApiException
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_TEST_SENDER = "elmincfrlu@gmail.com"
+DEFAULT_TEST_SENDER = "alimhaciyev99@gmail.com"
 
 
 class EmailResult:
