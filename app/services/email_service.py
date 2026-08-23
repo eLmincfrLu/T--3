@@ -1,32 +1,12 @@
-"""Transactional email sending via the Resend HTTP API (https://resend.com).
-
-No SDK dependency needed — Resend's API is a single plain HTTP POST, and
-`requests` is already a project dependency.
-
-Dev-mode fallback: if RESEND_API_KEY is not set in the environment, emails
-are NOT silently dropped and verification is NOT silently bypassed — instead
-send_email() returns ok=False with the rendered content attached, so callers
-can show the link directly in the UI (clearly marked as a dev-mode
-substitute for real delivery) while still requiring the same click-through
-step. This keeps local development/testing possible without a Resend
-account, without ever weakening the actual verification requirement.
-"""
+"""Transactional email sending via Brevo API (https://www.brevo.com)."""
 
 import logging
 import os
-
-import requests
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 
 logger = logging.getLogger(__name__)
 
-RESEND_API_URL = "https://api.resend.com/emails"
-REQUEST_TIMEOUT = 10  # seconds
-
-# Resend's shared sandbox sender. Until a custom domain is verified in the
-# Resend dashboard, mail sent "from" this address can only be delivered TO
-# the email address of the Resend account owner — any other recipient will
-# be rejected by Resend. Verifying your own domain removes that restriction
-# and lets EMAIL_FROM_ADDRESS be set to an address on that domain instead.
 DEFAULT_TEST_SENDER = "AZ Threat Radar <onboarding@resend.dev>"
 
 
@@ -37,29 +17,31 @@ class EmailResult:
 
 
 def send_email(to: str, subject: str, html: str) -> EmailResult:
-    api_key = os.getenv("RESEND_API_KEY")
+    api_key = os.getenv("BREVO_API_KEY")
     if not api_key:
-        logger.warning("RESEND_API_KEY not set — email not sent (dev mode). To: %s | Subject: %s", to, subject)
+        logger.warning("BREVO_API_KEY not set — email not sent (dev mode). To: %s | Subject: %s", to, subject)
         return EmailResult(ok=False, detail="not_configured")
 
     from_address = os.getenv("EMAIL_FROM_ADDRESS", DEFAULT_TEST_SENDER)
+    
+    # Sendinblue / Brevo konfiqurasiyası
+    configuration = sib_api_v3_sdk.Configuration()
+    configuration.api_key['api-key'] = api_key
+    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+
+    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+        to=[{"email": to}],
+        sender={"name": "AZ Threat Radar", "email": from_address},
+        subject=subject,
+        html_content=html
+    )
+
     try:
-        resp = requests.post(
-            RESEND_API_URL,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={"from": from_address, "to": [to], "subject": subject, "html": html},
-            timeout=REQUEST_TIMEOUT,
-        )
-        if resp.status_code >= 400:
-            logger.error("Resend API error %s: %s", resp.status_code, resp.text[:500])
-            return EmailResult(ok=False, detail=f"api_error_{resp.status_code}")
+        api_instance.send_transac_email(send_smtp_email)
         return EmailResult(ok=True)
-    except requests.RequestException as exc:
-        logger.error("Resend API request failed: %s", exc)
-        return EmailResult(ok=False, detail="network_error")
+    except ApiException as exc:
+        logger.error("Brevo API xətası: %s", exc)
+        return EmailResult(ok=False, detail="api_error")
 
 
 def _brand_wrapper(body_html: str) -> str:
