@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
@@ -67,9 +68,7 @@ def register():
                 if result.ok:
                     flash(translate(locale, "verify.sent", email=user.email), "success")
                 elif result.detail == "not_configured":
-                    # Dev mode: no RESEND_API_KEY configured yet. Verification
-                    # is still required — we just surface the link directly
-                    # instead of emailing it, so the flow stays testable.
+                    # Dev mode: no BREVO_API_KEY / RESEND_API_KEY configured yet.
                     flash(translate(locale, "verify.dev_mode_link", link=link), "warning")
                 else:
                     flash(translate(locale, "verify.send_failed"), "warning")

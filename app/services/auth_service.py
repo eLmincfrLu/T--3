@@ -1,3 +1,4 @@
+import os
 from flask import url_for
 
 from app.database.connection import db
@@ -68,11 +69,15 @@ def register_user(
 
 def send_verification_email(user: User, locale: str) -> tuple[EmailResult, str]:
     """Generates a fresh verification token/link and emails it to the user.
-    Returns (EmailResult, link) — the link is also returned so a dev-mode
-    caller (no RESEND_API_KEY configured) can surface it directly in the UI
-    when EmailResult.ok is False with detail == 'not_configured'."""
+    Uses APP_URL from environment if defined to support cross-device testing."""
     token = generate_email_verification_token(user.email)
-    link = url_for("auth.verify_email", token=token, _external=True)
+    
+    app_url = os.getenv("APP_URL")
+    if app_url:
+        link = f"{app_url.rstrip('/')}/verify-email/{token}"
+    else:
+        link = url_for("auth.verify_email", token=token, _external=True)
+
     subject = translate(locale, "verify.email_subject")
     html = build_verification_email(
         link=link,
