@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ t('verify.pending_heading') }} — {{ app_name }}{% endblock %}
+
+{% block auth_content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<header class="auth-topbar">
+  <div class="auth-topbar-brand">
+    <i class="bi bi-shield-lock-fill"></i>
+    <span>{{ app_name }}</span>
+  </div>
+  {% include "partials/language_switcher.html" %}
+</header>
+<div class="auth-page">
+  <div class="auth-grid"></div>
+  <div class="auth-card">
+    <div class="auth-logo">
+      <i class="bi bi-envelope-check-fill"></i>
+    </div>
+    <h1 class="auth-title">{{ t('verify.pending_heading') }}</h1>
+    <p class="auth-subtitle">
+      {% if email %}
+        {{ t('verify.pending_text', email=email) }}
+      {% else %}
+        {{ t('verify.pending_text_generic') }}
+      {% endif %}
+    </p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="post" action="{{ url_for('auth.resend_verification') }}" id="resendForm">
+      <input type="hidden" name="email" value="{{ email }}">
+      <button type="submit" class="btn btn-outline-light w-100 auth-btn" id="resendBtn" {% if not email %}disabled{% endif %}>
+        <i class="bi bi-arrow-repeat"></i> {{ t('verify.resend') }}
+      </button>
+    </form>
+    <p class="auth-switch mt-4 mb-0">
+      <a href="{{ url_for('auth.login') }}">{{ t('verify.back_to_login') }}</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

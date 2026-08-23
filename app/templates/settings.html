@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}{{ t('nav.settings') }} — {{ app_name }}{% endblock %}
+{% block page_heading %}{{ t('settings.heading') }}{% endblock %}
+
+{% block topbar_actions %}
+{% include "partials/language_switcher.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="panel-card">
+      <div class="panel-header">{{ t('settings.user_info') }}</div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      <dl class="detail-list" id="profileView">
+        <dt>
+          {{ t('settings.full_name') }}
+          <button type="button" class="btn btn-sm btn-link p-0 ms-1 profile-edit-btn" data-target="full_name" aria-label="{{ t('settings.edit_profile') }}" title="{{ t('settings.edit_profile') }}">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </dt>
+        <dd>{{ current_user.full_name }}</dd>
+        <dt>
+          {{ t('settings.position') }}
+          <button type="button" class="btn btn-sm btn-link p-0 ms-1 profile-edit-btn" data-target="position" aria-label="{{ t('settings.edit_profile') }}" title="{{ t('settings.edit_profile') }}">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </dt>
+        <dd>{{ current_user.position }}</dd>
+        <dt>{{ t('settings.email') }}</dt><dd>{{ current_user.email }}</dd>
+        <dt>{{ t('settings.role') }}</dt><dd>{{ t('settings.role_student') }}</dd>
+      </dl>
+      <form method="post" action="{{ url_for('dashboard.update_profile_page') }}" id="profileEditForm" class="d-none">
+        <div class="mb-3">
+          <label class="form-label" for="full_name">{{ t('settings.full_name') }}</label>
+          <input type="text" class="form-control" id="full_name" name="full_name" value="{{ current_user.full_name }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="position">{{ t('settings.position') }}</label>
+          <input type="text" class="form-control" id="position" name="position" value="{{ current_user.position }}" required>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary btn-sm">{{ t('common.save') }}</button>
+          <button type="button" class="btn btn-outline-light btn-sm" id="profileEditCancel">{{ t('common.cancel') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel-card">
+      <div class="panel-header">{{ t('settings.notifications') }}</div>
+      <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" id="notifyMalicious" checked disabled>
+        <label class="form-check-label" for="notifyMalicious">{{ t('settings.notify_malicious') }}</label>
+      </div>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="notifyWeekly" checked disabled>
+        <label class="form-check-label" for="notifyWeekly">{{ t('settings.notify_weekly') }}</label>
+      </div>
+      <p class="text-muted small mt-2 mb-0">{{ t('settings.not_implemented') }}</p>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel-card">
+      <div class="panel-header">{{ t('settings.security') }}</div>
+      <a href="{{ url_for('dashboard.change_password_page') }}" class="btn btn-outline-light btn-sm">{{ t('settings.change_password') }}</a>
+      <button class="btn btn-outline-light btn-sm ms-2" disabled>{{ t('settings.enable_2fa') }}</button>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel-card">
+      <div class="panel-header">{{ t('settings.theme') }}</div>
+      <label class="form-label">{{ t('settings.appearance') }}</label>
+      <select class="form-select" id="themeSelect">
+        <option value="dark" selected>{{ t('settings.theme_dark') }}</option>
+        <option value="light">{{ t('settings.theme_light') }}</option>
+      </select>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('themeSelect')?.addEventListener('change', (e) => {
+  document.documentElement.dataset.theme = e.target.value;
+  localStorage.setItem('tip-theme', e.target.value);
+});
+const saved = localStorage.getItem('tip-theme');
+if (saved) document.documentElement.dataset.theme = saved;
+
+function openProfileEdit(focusField) {
+  document.getElementById('profileView')?.classList.add('d-none');
+  document.getElementById('profileEditForm')?.classList.remove('d-none');
+  if (focusField) document.getElementById(focusField)?.focus();
+}
+
+function closeProfileEdit() {
+  document.getElementById('profileEditForm')?.classList.add('d-none');
+  document.getElementById('profileView')?.classList.remove('d-none');
+}
+
+document.querySelectorAll('.profile-edit-btn').forEach((btn) => {
+  btn.addEventListener('click', () => openProfileEdit(btn.dataset.target));
+});
+document.getElementById('profileEditCancel')?.addEventListener('click', closeProfileEdit);
+</script>
+{% endblock %}

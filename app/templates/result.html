@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}{{ data.target }} — {{ app_name }}{% endblock %}
+{% block page_heading %}{{ t('result.heading') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analysis.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css">
+{% endblock %}
+
+{% block topbar_actions %}
+<form method="post" action="{{ url_for('reports.save_report', analysis_id=analysis.id) }}" class="d-inline">
+<button type="submit" class="btn btn-sm btn-outline-light">{{ t('result.save_report') }}</button>
+</form>
+<a href="{{ url_for('reports.export_pdf', analysis_id=analysis.id) }}" class="btn btn-sm btn-primary">{{ t('result.download_pdf') }}</a>
+{% endblock %}
+
+{% block content %}
+{% set score = data.risk_score %}
+{% set risk_class = 'risk-safe' if score <= 30 else ('risk-suspicious' if score <= 70 else 'risk-malicious') %}
+
+<div class="row g-3">
+<div class="col-lg-4">
+<div class="panel-card">
+<div class="panel-header">{{ t('result.overview') }}</div>
+<dl class="detail-list">
+<dt>{{ t('common.target') }}</dt>
+<dd class="font-monospace">{{ data.target }}</dd>
+<dt>{{ t('common.type') }}</dt>
+<dd>{{ data.type|upper }}</dd>
+<dt>{{ t('result.analysis_date') }}</dt>
+<dd>{{ data.analysis_date[:19]|replace('T', ' ') }} UTC</dd>
+</dl>
+</div>
+
+<div class="panel-card mt-3">
+<div class="panel-header">{{ t('result.recommendations') }}</div>
+<p class="rec-banner {{ risk_class }} mb-0">{{ t('result.recommendation.' + data.recommendation|lower) }}</p>
+</div>
+</div>
+
+<div class="col-lg-4">
+<div class="panel-card text-center">
+<div class="panel-header">{{ t('result.risk_score') }}</div>
+<div class="risk-gauge {{ risk_class }}" data-score="{{ score }}">
+<svg viewBox="0 0 120 120" class="gauge-svg">
+<circle cx="60" cy="60" r="52" class="gauge-bg"></circle>
+<circle cx="60" cy="60" r="52" class="gauge-fill" style="--score: {{ score }};"></circle>
+</svg>
+<div class="gauge-value">{{ score }}</div>
+</div>
+<span class="badge badge-{{ data.status|lower }} fs-6">{{ t('status.' + data.status|lower) }}</span>
+</div>
+</div>
+
+<div class="col-lg-4">
+<div class="panel-card">
+<div class="panel-header">{{ t('result.risk_details') }}</div>
+<dl class="detail-list">
+<dt>{{ t('common.status') }}</dt>
+<dd><span class="badge badge-{{ data.status|lower }}">{{ t('status.' + data.status|lower) }}</span></dd>
+
+<dt>{{ t('result.categories') }}</dt>
+<dd>
+{% for cat in data.threat_categories %}
+<span class="badge badge-muted me-1">{{ cat }}</span>
+{% endfor %}
+</dd>
+
+<dt>{{ t('result.country') }}</dt>
+<dd>{{ data.country }}</dd>
+
+<dt>{{ t('result.isp') }}</dt>
+<dd>{{ data.isp }}</dd>
+
+<dt>{{ t('result.asn') }}</dt>
+<dd>{{ data.asn }}</dd>
+
+<dt>{{ t('result.hostname') }}</dt>
+<dd class="font-monospace">{{ data.hostname }}</dd>
+</dl>
+</div>
+</div>
+</div>
+
+<div class="row g-3 mt-1">
+<div class="col-md-6">
+<div class="panel-card">
+<div class="panel-header">{{ t('result.whois') }}</div>
+<dl class="detail-list">
+<dt>{{ t('result.registrar') }}</dt>
+<dd>{{ data.whois.registrar }}</dd>
+<dt>{{ t('result.registration_date') }}</dt>
+<dd>{{ data.whois.registration_date }}</dd>
+<dt>{{ t('result.expiration_date') }}</dt>
+<dd>{{ data.whois.expiration_date }}</dd>
+</dl>
+</div>
+</div>
+
+<div class="col-md-6">
+<div class="panel-card">
+<div class="panel-header">{{ t('result.reputation') }}</div>
+<dl class="detail-list">
+<dt>{{ t('result.virustotal') }}</dt>
+<dd>{{ data.reputation.virustotal_status }}</dd>
+<dt>{{ t('result.blacklist') }}</dt>
+<dd>{{ data.reputation.blacklist_status }}</dd>
+<dt>{{ t('result.malware') }}</dt>
+<dd>{{ data.reputation.malware_detection }}</dd>
+<dt>{{ t('result.phishing') }}</dt>
+<dd>{{ data.reputation.phishing_detection }}</dd>
+<dt>{{ t('result.spam') }}</dt>
+<dd>{{ data.reputation.spam_detection }}</dd>
+</dl>
+</div>
+</div>
+</div>
+
+<div class="row g-3 mt-1">
+<div class="col-12">
+<div class="panel-card">
+<div class="panel-header">{{ t('result.threat_origin') }}</div>
+
+<div class="map-wrap"
+     data-country="{{ data.country if data.country and data.country != 'Unknown' else '' }}"
+     data-is-threat="{{ '1' if data.status and data.status|lower != 'safe' else '0' }}">
+  <div id="country-map" style="height:320px;"></div>
+  <div class="map-origin-pill" style="display:none;">
+    <span class="map-origin-dot"></span>
+    <span class="map-origin-label"></span>
+  </div>
+  <div class="map-unknown-alert" style="display:none;">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ t('result.origin_alert') }}</span>
+  </div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div class="mt-3">
+<a href="{{ url_for('analysis.analyze_page') }}" class="btn btn-outline-light">{{ t('result.new_analysis') }}</a>
+<a href="{{ url_for('history.index') }}" class="btn btn-link text-light">{{ t('result.view_history') }}</a>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/js/jsvectormap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/maps/world.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var wrap = document.querySelector('.map-wrap');
+  if (!wrap) { return; }
+
+  var countryCode = wrap.getAttribute('data-country');
+  var isThreat = wrap.getAttribute('data-is-threat') === '1';
+
+  var options = {
+    selector: '#country-map',
+    map: 'world',
+    backgroundColor: 'transparent',
+    zoomButtons: false,
+    zoomOnScroll: false,
+    regionStyle: {
+      initial: { fill: 'transparent', stroke: '#3b5c7d', strokeWidth: 0.75 },
+      hover: { fill: 'rgba(56,189,248,.12)', stroke: '#38bdf8', strokeWidth: 1, cursor: 'pointer' }
+    }
+  };
+
+  if (countryCode) {
+    var values = {};
+    values[countryCode] = 100;
+    options.series = {
+      regions: [{
+        values: values,
+        scale: ['#ef3340', '#ef3340'],
+        normalizeFunction: 'polynomial'
+      }]
+    };
+  }
+
+  new jsVectorMap(options);
+
+  if (countryCode) {
+    var pill = wrap.querySelector('.map-origin-pill');
+    pill.querySelector('.map-origin-label').textContent = countryCode;
+    pill.style.display = 'flex';
+
+    var glowStyle = document.createElement('style');
+    glowStyle.textContent =
+      '#country-map path[data-code="' + countryCode.toLowerCase() + '"]{' +
+      'filter:drop-shadow(0 0 6px #ef3340);animation:mapPulse 2.4s ease-in-out infinite}' +
+      '@keyframes mapPulse{0%,100%{filter:drop-shadow(0 0 4px #ef3340)}50%{filter:drop-shadow(0 0 10px #ef3340)}}';
+    document.head.appendChild(glowStyle);
+  } else if (isThreat) {
+    wrap.querySelector('.map-unknown-alert').style.display = 'flex';
+  }
+});
+</script>
+{% endblock %}

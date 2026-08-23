@@ -1,0 +1,81 @@
+{# Small CSS flags next to AZ / EN / RU — no inline SVG (avoids sanitizer/CSP issues) #}
+{% macro lang_flag(code) -%}
+<span class="lang-flag lang-flag-{{ code }}" aria-hidden="true"></span>
+{%- endmacro %}
+<style>
+.lang-switcher-btn,
+  .lang-switcher .dropdown-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .lang-switcher .dropdown-item {
+    width: 100%;
+  }
+.lang-flag {
+    width: 16px;
+    height: 11px;
+    display: inline-block;
+    flex-shrink: 0;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.35);
+    overflow: hidden;
+    position: relative;
+    vertical-align: -1px;
+  }
+  .lang-flag-az {
+    background: linear-gradient(to bottom, #00b5e2 0 33.34%, #ef3340 33.34% 66.66%, #509e2f 66.66% 100%);
+  }
+  .lang-flag-az::before {
+    content: "";
+    position: absolute;
+    left: 7.1px;
+    top: 3.5px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    box-shadow: -1.1px 0 0 0 #fff;
+  }
+  .lang-flag-az::after {
+    content: "";
+    position: absolute;
+    left: 7.4px;
+    top: 3.8px;
+    width: 3.4px;
+    height: 3.4px;
+    background: #fff;
+    clip-path: polygon(50.0% 0.0%, 58.0% 30.6%, 85.4% 14.6%, 69.4% 42.0%, 100.0% 50.0%, 69.4% 58.0%, 85.4% 85.4%, 58.0% 69.4%, 50.0% 100.0%, 42.0% 69.4%, 14.6% 85.4%, 30.6% 58.0%, 0.0% 50.0%, 30.6% 42.0%, 14.6% 14.6%, 42.0% 30.6%);
+}
+  .lang-flag-en {
+    background-color: #012169;
+    background-image:
+      linear-gradient(to bottom, transparent 44%, #c8102e 44%, #c8102e 56%, transparent 56%),
+      linear-gradient(to right, transparent 44%, #c8102e 44%, #c8102e 56%, transparent 56%),
+      linear-gradient(to bottom, transparent 36%, #fff 36%, #fff 64%, transparent 64%),
+      linear-gradient(to right, transparent 36%, #fff 36%, #fff 64%, transparent 64%),
+      linear-gradient(45deg, transparent 46%, #c8102e 46%, #c8102e 54%, transparent 54%),
+      linear-gradient(-45deg, transparent 46%, #c8102e 46%, #c8102e 54%, transparent 54%),
+      linear-gradient(45deg, transparent 39%, #fff 39%, #fff 61%, transparent 61%),
+      linear-gradient(-45deg, transparent 39%, #fff 39%, #fff 61%, transparent 61%);
+}
+  .lang-flag-ru {
+    background: linear-gradient(to bottom, #fff 0 33.34%, #0039a6 33.34% 66.66%, #d52b1e 66.66% 100%);
+  }
+</style>
+<div class="dropdown lang-switcher">
+  <button class="btn lang-switcher-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    {{ lang_flag(current_locale) }}
+    {{ locale_labels[current_locale] }}
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    {% for code in supported_locales %}
+    <li>
+      <a class="dropdown-item {% if code == current_locale %}active{% endif %}"
+         href="{{ url_for('auth.set_language', lang=code, next=request.url) }}">
+        {{ lang_flag(code) }}
+        {{ locale_labels[code] }}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
