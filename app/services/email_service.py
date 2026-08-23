@@ -40,7 +40,8 @@ def send_email(to: str, subject: str, html: str) -> EmailResult:
         api_instance.send_transac_email(send_smtp_email)
         return EmailResult(ok=True)
     except ApiException as exc:
-        logger.error("Brevo API xətası: %s", exc)
+        logger.error("Brevo API xətası: %s | Status: %s | Body: %s", exc, exc.status, exc.body)
+        print(f"BREVO ERROR: {exc.body}")
         return EmailResult(ok=False, detail="api_error")
 
 
