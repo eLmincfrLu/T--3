@@ -77,6 +77,7 @@ def send_verification_email(user: User, locale: str) -> tuple[EmailResult, str]:
         link = f"{app_url.rstrip('/')}/verify-email/{token}"
     else:
         link = url_for("auth.verify_email", token=token, _external=True)
+    print(f"\n=======================\n GENERATED LINK: {link} \n=======================\n")
 
     subject = translate(locale, "verify.email_subject")
     html = build_verification_email(
