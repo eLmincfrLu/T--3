@@ -24,7 +24,6 @@ def send_email(to: str, subject: str, html: str) -> EmailResult:
 
     from_address = os.getenv("EMAIL_FROM_ADDRESS", DEFAULT_TEST_SENDER)
     
-    # Sendinblue / Brevo konfiqurasiyası
     configuration = sib_api_v3_sdk.Configuration()
     configuration.api_key['api-key'] = api_key
     api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
@@ -33,9 +32,7 @@ def send_email(to: str, subject: str, html: str) -> EmailResult:
         to=[{"email": to}],
         sender={"name": "AZ Threat Radar", "email": from_address},
         subject=subject,
-        html_content=html,
-        # Bu sətiri əlavə edin:
-        headers={"X-Mailin-custom": "clicktracking=off"}
+        html_content=html
     )
 
     try:
@@ -63,9 +60,9 @@ def _brand_wrapper(body_html: str) -> str:
 def build_verification_email(link: str, subject: str, heading: str, body: str, button_label: str, fallback_hint: str) -> str:
     return _brand_wrapper(f"""
         <h2 style="margin: 0 0 12px; font-size: 18px; color: #0f172a;">{heading}</h2>
-        <p style="margin: 0 0 20px;">{body}</p>
-        <p style="margin: 0 0 20px;">
-          <a href="{link}" clicktracking="off" style="display:inline-block; background:#2563eb; color:#ffffff; text-decoration:none; padding:10px 20px; border-radius:6px; font-weight:600;">{button_label}</a>
-        </p>
-        <p style="margin: 0; color: #64748b; font-size: 12px;">{fallback_hint}<br><a href="{link}" clicktracking="off" style="color:#2563eb; word-break: break-all;">{link}</a></p>
+        <p style="margin: 0 0 16px;">{body}</p>
+        <p style="margin: 0 0 8px; font-weight: 600; color: #334155;">Hesabınızı təsdiqləmək üçün aşağıdakı keçidə klikləyin:</p>
+        <div style="background: #f1f5f9; padding: 12px; border-radius: 6px; word-break: break-all; font-family: monospace; font-size: 13px; color: #2563eb;">
+          {link}
+        </div>
     """)
