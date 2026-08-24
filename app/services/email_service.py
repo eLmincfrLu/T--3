@@ -63,7 +63,7 @@ def build_verification_email(link: str, subject: str, heading: str, body: str, b
         <h2 style="margin: 0 0 12px; font-size: 18px; color: #0f172a;">{heading}</h2>
         <p style="margin: 0 0 20px;">{body}</p>
         <p style="margin: 0 0 20px;">
-          <a href="{link}" style="display:inline-block; background:#2563eb; color:#ffffff; text-decoration:none; padding:10px 20px; border-radius:6px; font-weight:600;">{button_label}</a>
+          <a href="{link}" clicktracking="off" style="display:inline-block; background:#2563eb; color:#ffffff; text-decoration:none; padding:10px 20px; border-radius:6px; font-weight:600;">{button_label}</a>
         </p>
-        <p style="margin: 0; color: #64748b; font-size: 12px;">{fallback_hint}<br><a href="{link}" style="color:#2563eb; word-break: break-all;">{link}</a></p>
+        <p style="margin: 0; color: #64748b; font-size: 12px;">{fallback_hint}<br><a href="{link}" clicktracking="off" style="color:#2563eb; word-break: break-all;">{link}</a></p>
     """)
