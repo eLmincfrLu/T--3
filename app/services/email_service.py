@@ -33,7 +33,9 @@ def send_email(to: str, subject: str, html: str) -> EmailResult:
         to=[{"email": to}],
         sender={"name": "AZ Threat Radar", "email": from_address},
         subject=subject,
-        html_content=html
+        html_content=html,
+        # Bu sətiri əlavə edin:
+        headers={"X-Mailin-custom": "clicktracking=off"}
     )
 
     try:
