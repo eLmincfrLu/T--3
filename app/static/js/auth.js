@@ -78,5 +78,7 @@ function bindGeneratePasswordButtons() {
 
 bindAuthForm("loginForm", "loginBtn");
 bindAuthForm("registerForm", "registerBtn");
+bindAuthForm("forgotPasswordForm", "forgotPasswordBtn");
+bindAuthForm("resetPasswordForm", "resetPasswordBtn");
 bindPasswordToggles();
 bindGeneratePasswordButtons();

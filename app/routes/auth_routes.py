@@ -9,7 +9,10 @@ from app.services.auth_service import (
     authenticate,
     mark_email_verified,
     register_user,
+    reset_password,
+    resolve_password_reset_token,
     resolve_verification_token,
+    send_password_reset_email,
     send_verification_email,
 )
 
@@ -115,6 +118,51 @@ def resend_verification():
     # are registered.
     flash(translate(locale, "verify.resend_sent"), "success")
     return redirect(url_for("auth.verify_pending", email=email))
+
+
+@auth_bp.route("/forgot-password", methods=["GET", "POST"])
+# Abuse protection: an unauthenticated endpoint that triggers an outbound
+# email — keep it tightly throttled per IP, same as resend-verification.
+@limiter.limit("5 per hour", methods=["POST"])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard.index"))
+    locale = resolve_locale()
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        user = User.query.filter_by(email=email).first() if email else None
+        if user:
+            send_password_reset_email(user, locale)
+        # Always show the same generic confirmation regardless of whether the
+        # account exists, to avoid leaking which emails are registered.
+        flash(translate(locale, "reset.sent"), "success")
+        return redirect(url_for("auth.login"))
+    return render_template("forgot_password.html")
+
+
+@auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password_page(token):
+    locale = resolve_locale()
+    user, expired = resolve_password_reset_token(token)
+    if not user:
+        flash(translate(locale, "reset.invalid_link"), "danger")
+        return redirect(url_for("auth.forgot_password"))
+    if expired:
+        flash(translate(locale, "reset.link_expired"), "warning")
+        return redirect(url_for("auth.forgot_password"))
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+        if password != confirm:
+            flash(translate(locale, "register.password_mismatch"), "danger")
+        else:
+            err = reset_password(user, password, locale)
+            if err:
+                flash(err, "danger")
+            else:
+                flash(translate(locale, "reset.success"), "success")
+                return redirect(url_for("auth.login"))
+    return render_template("reset_password.html", token=token)
 
 
 @auth_bp.route("/set-language/<lang>")

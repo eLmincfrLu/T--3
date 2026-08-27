@@ -3,9 +3,14 @@ from flask import url_for
 
 from app.database.connection import db
 from app.models.user import User
-from app.services.email_service import EmailResult, build_verification_email, send_email
+from app.services.email_service import EmailResult, build_password_reset_email, build_verification_email, send_email
 from app.utils.security import hash_password, verify_password
-from app.utils.tokens import generate_email_verification_token, verify_email_verification_token
+from app.utils.tokens import (
+    generate_email_verification_token,
+    generate_password_reset_token,
+    verify_email_verification_token,
+    verify_password_reset_token,
+)
 from app.i18n import format_password_errors, translate
 from app.utils.validators import validate_email, validate_password, validate_required_text
 
@@ -123,6 +128,52 @@ def update_profile(user: User, full_name: str, position: str, locale: str) -> st
 def change_password(user: User, current_password: str, new_password: str, locale: str) -> str | None:
     if not verify_password(user.password_hash, current_password):
         return translate(locale, "settings.current_password_wrong")
+    ok, pwd_errors = validate_password(new_password)
+    if not ok:
+        return format_password_errors(locale, pwd_errors)
+    user.password_hash = hash_password(new_password)
+    db.session.commit()
+    return None
+
+
+def send_password_reset_email(user: User, locale: str) -> tuple[EmailResult, str]:
+    """Generates a fresh password-reset token/link and emails it to the user.
+    Mirrors send_verification_email: uses APP_URL from environment if defined
+    so the link works from another device/email client, not just localhost."""
+    token = generate_password_reset_token(user.email)
+
+    app_url = os.getenv("APP_URL")
+    if app_url:
+        link = f"{app_url.rstrip('/')}/reset-password/{token}"
+    else:
+        link = url_for("auth.reset_password_page", token=token, _external=True)
+    print(f"\n=======================\n PASSWORD RESET LINK: {link} \n=======================\n")
+
+    subject = translate(locale, "reset.email_subject")
+    html = build_password_reset_email(
+        link=link,
+        heading=translate(locale, "reset.email_heading"),
+        body=translate(locale, "reset.email_body"),
+        action_line=translate(locale, "reset.email_action"),
+    )
+    result = send_email(user.email, subject, html)
+    return result, link
+
+
+def resolve_password_reset_token(token: str) -> tuple[User | None, bool]:
+    """Returns (user, expired). user is None if the token is invalid/tampered
+    or no longer matches an existing account."""
+    email, expired = verify_password_reset_token(token)
+    if not email:
+        return None, False
+    user = User.query.filter_by(email=email).first()
+    return user, expired
+
+
+def reset_password(user: User, new_password: str, locale: str) -> str | None:
+    """Sets a new password for a user who came through a valid reset link.
+    No knowledge of the old password is required — the token itself is the
+    proof of ownership. Returns an error message, or None on success."""
     ok, pwd_errors = validate_password(new_password)
     if not ok:
         return format_password_errors(locale, pwd_errors)

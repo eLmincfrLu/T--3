@@ -95,6 +95,18 @@
   padding: 0.25rem 0.55rem;
 }
 
+.forgot-password-link {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
+
 .password-input-wrap {
   position: relative;
 }

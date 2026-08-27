@@ -71,3 +71,14 @@ def build_verification_email(link: str, subject: str, heading: str, body: str, b
           <a href="{link}" style="color: #2563eb;">{link}</a>
         </p>
     """)
+
+
+def build_password_reset_email(link: str, heading: str, body: str, action_line: str) -> str:
+    return _brand_wrapper(f"""
+        <h2 style="margin: 0 0 12px; font-size: 18px; color: #0f172a;">{heading}</h2>
+        <p style="margin: 0 0 16px;">{body}</p>
+        <p style="margin: 0 0 8px; font-weight: 600; color: #334155;">{action_line}</p>
+        <div style="background: #f1f5f9; padding: 12px; border-radius: 6px; word-break: break-all; font-family: monospace; font-size: 13px; color: #2563eb;">
+          {link}
+        </div>
+    """)
