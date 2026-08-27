@@ -60,9 +60,14 @@ def _brand_wrapper(body_html: str) -> str:
 def build_verification_email(link: str, subject: str, heading: str, body: str, button_label: str, fallback_hint: str) -> str:
     return _brand_wrapper(f"""
         <h2 style="margin: 0 0 12px; font-size: 18px; color: #0f172a;">{heading}</h2>
-        <p style="margin: 0 0 16px;">{body}</p>
-        <p style="margin: 0 0 8px; font-weight: 600; color: #334155;">Hesabınızı təsdiqləmək üçün aşağıdakı keçidə klikləyin:</p>
-        <div style="background: #f1f5f9; padding: 12px; border-radius: 6px; word-break: break-all; font-family: monospace; font-size: 13px; color: #2563eb;">
-          {link}
+        <p style="margin: 0 0 20px;">{body}</p>
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="{link}" target="_blank" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
+            {button_label}
+          </a>
         </div>
+        <p style="margin: 20px 0 0; color: #64748b; font-size: 12px; word-break: break-all;">
+          {fallback_hint}<br>
+          <a href="{link}" style="color: #2563eb;">{link}</a>
+        </p>
     """)
