@@ -1,7 +1,18 @@
 from datetime import datetime, timezone
 
+from app.services.abuseipdb_service import check_ip as abuseipdb_check
 from app.services.risk_engine import compute_risk
+from app.services.safe_browsing_service import check_url as safe_browsing_check
+from app.services.urlhaus_service import check_target as urlhaus_check
 from app.services.virustotal_service import fetch_threat_intel
+
+# How much each corroborating source adds to the risk score on top of
+# VirusTotal's own base score + category weights. Kept modest per-source
+# so that no single extra signal can single-handedly flip a result, but
+# several sources agreeing pushes the score up meaningfully (consensus).
+ABUSEIPDB_WEIGHT = 20
+SAFE_BROWSING_WEIGHT = 25
+URLHAUS_WEIGHT = 25
 
 
 def _category_weights(reputation: dict) -> dict[str, int]:
@@ -11,6 +22,7 @@ def _category_weights(reputation: dict) -> dict[str, int]:
         "Botnet Activity": 0,
         "Spam": 0,
         "Suspicious Network": 0,
+        "Abuse Reports": 0,
     }
     if reputation["phishing_detection"] == "Detected":
         weights["Phishing"] = 25
@@ -34,6 +46,39 @@ def _base_score(reputation: dict) -> int:
     return min(100, malicious * 8 + suspicious * 4)
 
 
+def _gather_extra_sources(target: str, target_type: str) -> list[dict]:
+    """Calls the extra threat-intel sources relevant to this target_type.
+    Each call is isolated: a failure or missing key in one source never
+    prevents the others from running or blocks the overall analysis."""
+    signals = []
+    if target_type == "ip":
+        signals.append(abuseipdb_check(target))
+    if target_type in ("url", "domain"):
+        signals.append(safe_browsing_check(target, target_type))
+        signals.append(urlhaus_check(target, target_type))
+    return signals
+
+
+def _apply_extra_sources(weights: dict[str, int], signals: list[dict]) -> None:
+    """Folds each corroborating source's verdict into the category weights
+    in place. A source only contributes when it actually ran and flagged
+    the target — sources that were skipped (no API key, wrong target
+    type) or came back clean contribute nothing."""
+    for signal in signals:
+        if not signal.get("available") or not signal.get("malicious"):
+            continue
+        if signal["source"] == "AbuseIPDB":
+            weights["Abuse Reports"] = max(weights.get("Abuse Reports", 0), ABUSEIPDB_WEIGHT)
+        elif signal["source"] == "Google Safe Browsing":
+            threat_types = signal.get("threat_types") or []
+            if "SOCIAL_ENGINEERING" in threat_types:
+                weights["Phishing"] = max(weights.get("Phishing", 0), SAFE_BROWSING_WEIGHT)
+            else:
+                weights["Malware Hosting"] = max(weights.get("Malware Hosting", 0), SAFE_BROWSING_WEIGHT)
+        elif signal["source"] == "URLhaus":
+            weights["Malware Hosting"] = max(weights.get("Malware Hosting", 0), URLHAUS_WEIGHT)
+
+
 def analyze_target(target: str, target_type: str) -> dict:
     intel = fetch_threat_intel(target, target_type)
     reputation = intel["reputation"]
@@ -42,8 +87,15 @@ def analyze_target(target: str, target_type: str) -> dict:
     weights = _category_weights(reputation)
     base = _base_score(reputation)
 
+    extra_signals = _gather_extra_sources(target, target_type)
+    _apply_extra_sources(weights, extra_signals)
+
     risk = compute_risk(base, weights)
     threats = risk.categories if risk.categories else (["None"] if risk.status == "SAFE" else [])
+
+    sources = [{"source": "VirusTotal", "ran": True, "available": True,
+                "malicious": bool(risk.categories), "detail": reputation["virustotal_status"]}]
+    sources.extend(extra_signals)
 
     return {
         "target": target,
@@ -59,4 +111,5 @@ def analyze_target(target: str, target_type: str) -> dict:
         "hostname": network["hostname"],
         "whois": whois,
         "reputation": reputation,
+        "sources": sources,
     }

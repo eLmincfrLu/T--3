@@ -119,6 +119,37 @@
 <div class="row g-3 mt-1">
 <div class="col-12">
 <div class="panel-card">
+<div class="panel-header">{{ t('result.sources') }}</div>
+<div class="source-list">
+  {% for src in data.sources %}
+  <div class="source-item {% if not src.available %}source-item-skipped{% elif src.malicious %}source-item-flagged{% else %}source-item-clean{% endif %}">
+    <div class="source-item-name">
+      {% if not src.available %}
+        <i class="bi bi-dash-circle"></i>
+      {% elif src.malicious %}
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      {% else %}
+        <i class="bi bi-check-circle-fill"></i>
+      {% endif %}
+      {{ src.source }}
+    </div>
+    <div class="source-item-detail">
+      {% if not src.available %}
+        {{ t('result.source_not_checked') }}
+      {% else %}
+        {{ src.detail }}
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+</div>
+</div>
+</div>
+
+<div class="row g-3 mt-1">
+<div class="col-12">
+<div class="panel-card">
 <div class="panel-header">{{ t('result.threat_origin') }}</div>
 
 <div class="map-wrap"
