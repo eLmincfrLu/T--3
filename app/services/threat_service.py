@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from app.services.abuseipdb_service import check_ip as abuseipdb_check
+from app.services.otx_service import check_indicator as otx_check
 from app.services.risk_engine import compute_risk
 from app.services.safe_browsing_service import check_url as safe_browsing_check
 from app.services.urlhaus_service import check_target as urlhaus_check
@@ -13,6 +14,7 @@ from app.services.virustotal_service import fetch_threat_intel
 ABUSEIPDB_WEIGHT = 20
 SAFE_BROWSING_WEIGHT = 25
 URLHAUS_WEIGHT = 25
+OTX_WEIGHT = 15
 
 
 def _category_weights(reputation: dict) -> dict[str, int]:
@@ -23,6 +25,7 @@ def _category_weights(reputation: dict) -> dict[str, int]:
         "Spam": 0,
         "Suspicious Network": 0,
         "Abuse Reports": 0,
+        "Threat Intelligence": 0,
     }
     if reputation["phishing_detection"] == "Detected":
         weights["Phishing"] = 25
@@ -56,6 +59,7 @@ def _gather_extra_sources(target: str, target_type: str) -> list[dict]:
     if target_type in ("url", "domain"):
         signals.append(safe_browsing_check(target, target_type))
         signals.append(urlhaus_check(target, target_type))
+    signals.append(otx_check(target, target_type))
     return signals
 
 
@@ -77,6 +81,8 @@ def _apply_extra_sources(weights: dict[str, int], signals: list[dict]) -> None:
                 weights["Malware Hosting"] = max(weights.get("Malware Hosting", 0), SAFE_BROWSING_WEIGHT)
         elif signal["source"] == "URLhaus":
             weights["Malware Hosting"] = max(weights.get("Malware Hosting", 0), URLHAUS_WEIGHT)
+        elif signal["source"] == "AlienVault OTX":
+            weights["Threat Intelligence"] = max(weights.get("Threat Intelligence", 0), OTX_WEIGHT)
 
 
 def analyze_target(target: str, target_type: str) -> dict:
