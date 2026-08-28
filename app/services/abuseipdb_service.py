@@ -58,6 +58,8 @@ def check_ip(ip: str) -> dict:
         "available": True,
         "malicious": is_malicious,
         "confidence": confidence,
+        "country": data.get("countryCode") or None,
+        "isp": data.get("isp") or None,
         "total_reports": total_reports,
         "detail": f"{confidence}% abuse confidence ({total_reports} reports)",
         "reason": None,

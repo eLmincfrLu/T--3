@@ -85,6 +85,23 @@ def _apply_extra_sources(weights: dict[str, int], signals: list[dict]) -> None:
             weights["Threat Intelligence"] = max(weights.get("Threat Intelligence", 0), OTX_WEIGHT)
 
 
+def _fill_network_fallback(network: dict, signals: list[dict]) -> None:
+    """VirusTotal sometimes returns 'Unknown' for country/ISP (e.g. for
+    freshly-seen IPs it hasn't fully profiled). When that happens, fall
+    back to AbuseIPDB's data for the same fields — it's IP-only, so this
+    only applies when we actually ran an AbuseIPDB lookup. Mutates network
+    in place; does nothing if AbuseIPDB didn't run or has no usable data."""
+    abuseipdb_signal = next(
+        (s for s in signals if s.get("source") == "AbuseIPDB" and s.get("available")), None
+    )
+    if not abuseipdb_signal:
+        return
+    if network.get("country") in (None, "", "Unknown") and abuseipdb_signal.get("country"):
+        network["country"] = abuseipdb_signal["country"]
+    if network.get("isp") in (None, "", "Unknown") and abuseipdb_signal.get("isp"):
+        network["isp"] = abuseipdb_signal["isp"]
+
+
 def analyze_target(target: str, target_type: str) -> dict:
     intel = fetch_threat_intel(target, target_type)
     reputation = intel["reputation"]
@@ -95,6 +112,7 @@ def analyze_target(target: str, target_type: str) -> dict:
 
     extra_signals = _gather_extra_sources(target, target_type)
     _apply_extra_sources(weights, extra_signals)
+    _fill_network_fallback(network, extra_signals)
 
     risk = compute_risk(base, weights)
     threats = risk.categories if risk.categories else (["None"] if risk.status == "SAFE" else [])
