@@ -33,14 +33,24 @@
       <a class="nav-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}" href="{{ url_for('reports.index') }}">
         <i class="bi bi-file-earmark-bar-graph"></i> {{ t('nav.reports') }}
       </a>
-      <a class="nav-link {% if request.endpoint == 'dashboard.settings' %}active{% endif %}" href="{{ url_for('dashboard.settings') }}">
+      <a class="nav-link {% if request.endpoint in ('dashboard.settings', 'dashboard.profile', 'dashboard.change_password_page') %}active{% endif %}" href="{{ url_for('dashboard.settings') }}">
         <i class="bi bi-gear"></i> {{ t('nav.settings') }}
       </a>
     </nav>
     <div class="sidebar-footer">
-      <div class="user-pill">
-        <i class="bi bi-person-circle"></i>
-        <span class="text-truncate">{{ current_user.email }}</span>
+      <div class="dropup user-menu">
+        <button type="button" class="user-pill user-pill-btn w-100" id="userMenuToggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-person-circle"></i>
+          <span class="text-truncate">{{ current_user.full_name }}</span>
+          <i class="bi bi-chevron-up user-menu-caret ms-auto"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark user-menu-dropdown" aria-labelledby="userMenuToggle">
+          <li><a class="dropdown-item" href="{{ url_for('dashboard.profile') }}"><i class="bi bi-person-badge me-2"></i>{{ t('nav.my_profile') }}</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('dashboard.settings') }}"><i class="bi bi-gear me-2"></i>{{ t('nav.settings') }}</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('reports.index') }}"><i class="bi bi-file-earmark-bar-graph me-2"></i>{{ t('nav.reports') }}</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="{{ url_for('dashboard.change_password_page') }}"><i class="bi bi-shield-lock me-2"></i>{{ t('settings.change_password') }}</a></li>
+        </ul>
       </div>
       <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-light w-100 mt-2">
         <i class="bi bi-box-arrow-right"></i> {{ t('nav.logout') }}

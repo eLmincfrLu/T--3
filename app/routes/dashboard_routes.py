@@ -89,6 +89,12 @@ def settings():
     return render_template("settings.html")
 
 
+@dashboard_bp.route("/profile")
+@login_required
+def profile():
+    return render_template("profile.html")
+
+
 @dashboard_bp.route("/settings/update-profile", methods=["POST"])
 @login_required
 def update_profile_page():
@@ -100,7 +106,7 @@ def update_profile_page():
         flash(err, "danger")
     else:
         flash(translate(locale, "settings.profile_updated"), "success")
-    return redirect(url_for("dashboard.settings"))
+    return redirect(url_for("dashboard.profile"))
 
 
 @dashboard_bp.route("/settings/change-password", methods=["GET", "POST"])
@@ -119,5 +125,5 @@ def change_password_page():
                 flash(err, "danger")
             else:
                 flash(translate(locale, "settings.password_changed"), "success")
-                return redirect(url_for("dashboard.settings"))
+                return redirect(url_for("dashboard.profile"))
     return render_template("change_password.html")

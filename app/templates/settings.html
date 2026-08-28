@@ -9,48 +9,16 @@
 {% block content %}
 <div class="row g-3">
   <div class="col-lg-6">
-    <div class="panel-card">
-      <div class="panel-header">{{ t('settings.user_info') }}</div>
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }} py-2">{{ message }}</div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-      <dl class="detail-list" id="profileView">
-        <dt>
-          {{ t('settings.full_name') }}
-          <button type="button" class="btn btn-sm btn-link p-0 ms-1 profile-edit-btn" data-target="full_name" aria-label="{{ t('settings.edit_profile') }}" title="{{ t('settings.edit_profile') }}">
-            <i class="bi bi-pencil-fill"></i>
-          </button>
-        </dt>
-        <dd>{{ current_user.full_name }}</dd>
-        <dt>
-          {{ t('settings.position') }}
-          <button type="button" class="btn btn-sm btn-link p-0 ms-1 profile-edit-btn" data-target="position" aria-label="{{ t('settings.edit_profile') }}" title="{{ t('settings.edit_profile') }}">
-            <i class="bi bi-pencil-fill"></i>
-          </button>
-        </dt>
-        <dd>{{ current_user.position }}</dd>
-        <dt>{{ t('settings.email') }}</dt><dd>{{ current_user.email }}</dd>
-        <dt>{{ t('settings.role') }}</dt><dd>{{ t('settings.role_student') }}</dd>
-      </dl>
-      <form method="post" action="{{ url_for('dashboard.update_profile_page') }}" id="profileEditForm" class="d-none">
-        <div class="mb-3">
-          <label class="form-label" for="full_name">{{ t('settings.full_name') }}</label>
-          <input type="text" class="form-control" id="full_name" name="full_name" value="{{ current_user.full_name }}" required>
+    <a href="{{ url_for('dashboard.profile') }}" class="panel-card profile-link-card text-decoration-none">
+      <div class="profile-link-row">
+        <div class="profile-link-icon"><i class="bi bi-person-circle"></i></div>
+        <div class="flex-grow-1">
+          <div class="panel-header mb-1">{{ t('settings.my_profile') }}</div>
+          <div class="text-muted small">{{ current_user.full_name }} · {{ current_user.email }}</div>
         </div>
-        <div class="mb-3">
-          <label class="form-label" for="position">{{ t('settings.position') }}</label>
-          <input type="text" class="form-control" id="position" name="position" value="{{ current_user.position }}" required>
-        </div>
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary btn-sm">{{ t('common.save') }}</button>
-          <button type="button" class="btn btn-outline-light btn-sm" id="profileEditCancel">{{ t('common.cancel') }}</button>
-        </div>
-      </form>
-    </div>
+        <i class="bi bi-chevron-right text-muted"></i>
+      </div>
+    </a>
   </div>
   <div class="col-lg-6">
     <div class="panel-card">
@@ -94,21 +62,5 @@ document.getElementById('themeSelect')?.addEventListener('change', (e) => {
 });
 const saved = localStorage.getItem('tip-theme');
 if (saved) document.documentElement.dataset.theme = saved;
-
-function openProfileEdit(focusField) {
-  document.getElementById('profileView')?.classList.add('d-none');
-  document.getElementById('profileEditForm')?.classList.remove('d-none');
-  if (focusField) document.getElementById(focusField)?.focus();
-}
-
-function closeProfileEdit() {
-  document.getElementById('profileEditForm')?.classList.add('d-none');
-  document.getElementById('profileView')?.classList.remove('d-none');
-}
-
-document.querySelectorAll('.profile-edit-btn').forEach((btn) => {
-  btn.addEventListener('click', () => openProfileEdit(btn.dataset.target));
-});
-document.getElementById('profileEditCancel')?.addEventListener('click', closeProfileEdit);
 </script>
 {% endblock %}

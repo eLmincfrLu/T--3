@@ -99,6 +99,108 @@ body.app-body {
   color: var(--muted);
 }
 
+.user-pill-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.user-pill-btn:hover,
+.user-pill-btn:focus,
+.user-pill-btn[aria-expanded="true"] {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.user-pill-btn span.text-truncate {
+  max-width: 9.5rem;
+}
+
+.user-menu-caret {
+  font-size: 0.7rem;
+  transition: transform 0.15s ease;
+}
+
+.user-pill-btn[aria-expanded="true"] .user-menu-caret {
+  transform: rotate(180deg);
+}
+
+.user-menu-dropdown {
+  background: var(--card);
+  border-color: var(--border);
+  width: 100%;
+  min-width: 0;
+}
+
+.user-menu-dropdown .dropdown-item {
+  color: var(--text);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+}
+
+.user-menu-dropdown .dropdown-item:hover,
+.user-menu-dropdown .dropdown-item:focus {
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--text);
+}
+
+.user-menu-dropdown .dropdown-divider {
+  border-color: var(--border);
+}
+
+.profile-link-card {
+  display: block;
+  color: inherit;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.profile-link-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  color: inherit;
+}
+
+.profile-link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.profile-link-icon {
+  font-size: 1.75rem;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.profile-avatar {
+  font-size: 3rem;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.profile-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.profile-role {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .main-wrap {
   margin-left: var(--sidebar-w);
   flex: 1;
