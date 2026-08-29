@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from app.services.abuseipdb_service import check_ip as abuseipdb_check
+from app.services.local_ioc_service import check_indicator as local_ioc_check
 from app.services.otx_service import check_indicator as otx_check
 from app.services.risk_engine import compute_risk
 from app.services.safe_browsing_service import check_url as safe_browsing_check
@@ -13,6 +14,9 @@ from app.services.virustotal_service import fetch_threat_intel
 ABUSEIPDB_WEIGHT = 20
 SAFE_BROWSING_WEIGHT = 25
 OTX_WEIGHT = 15
+# Higher than the API-based sources: a hit here is a confirmed, curated
+# match against our own observed-campaign feed, not a third-party score.
+LOCAL_IOC_WEIGHT = 35
 
 
 def _category_weights(reputation: dict) -> dict[str, int]:
@@ -52,6 +56,7 @@ def _gather_extra_sources(target: str, target_type: str) -> list[dict]:
     Each call is isolated: a failure or missing key in one source never
     prevents the others from running or blocks the overall analysis."""
     signals = []
+    signals.append(local_ioc_check(target, target_type))
     if target_type == "ip":
         signals.append(abuseipdb_check(target))
     if target_type in ("url", "domain"):
@@ -78,6 +83,10 @@ def _apply_extra_sources(weights: dict[str, int], signals: list[dict]) -> None:
                 weights["Malware Hosting"] = max(weights.get("Malware Hosting", 0), SAFE_BROWSING_WEIGHT)
         elif signal["source"] == "AlienVault OTX":
             weights["Threat Intelligence"] = max(weights.get("Threat Intelligence", 0), OTX_WEIGHT)
+        elif signal["source"] == "AZ Threat Radar Local Intel":
+            weights["Known Malicious (Local Feed)"] = max(
+                weights.get("Known Malicious (Local Feed)", 0), LOCAL_IOC_WEIGHT
+            )
 
 
 def _fill_network_fallback(network: dict, signals: list[dict]) -> None:
