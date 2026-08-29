@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}{{ t('nav.threat_actors') }} — {{ app_name }}{% endblock %}
+{% block page_heading %}{{ t('nav.threat_actors') }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/threat_actors.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="ta-hero">
+  <div class="ta-hero-grid"></div>
+  <div class="ta-hero-content">
+    <i class="bi bi-radar ta-hero-icon"></i>
+    <h2 class="ta-hero-title">{{ t('threat_actors.hero_title') }}</h2>
+    <p class="ta-hero-sub">{{ t('threat_actors.hero_sub') }}</p>
+    <div class="ta-stat-row">
+      <div class="ta-stat">
+        <div class="ta-stat-value" data-count="{{ apt_actors|length }}">0</div>
+        <div class="ta-stat-label">{{ t('threat_actors.stat_apt') }}</div>
+      </div>
+      <div class="ta-stat">
+        <div class="ta-stat-value" data-count="{{ hacktivist_actors|length }}">0</div>
+        <div class="ta-stat-label">{{ t('threat_actors.stat_hacktivist') }}</div>
+      </div>
+      <div class="ta-stat">
+        <div class="ta-stat-value" data-count="{{ incidents|length }}">0</div>
+        <div class="ta-stat-label">{{ t('threat_actors.stat_incidents') }}</div>
+      </div>
+      <div class="ta-stat">
+        <div class="ta-stat-value" data-count="{{ apt_actors|map(attribute='cves')|map('length')|sum }}">0</div>
+        <div class="ta-stat-label">{{ t('threat_actors.stat_cves') }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APT / state-sponsored actors -->
+<div class="ta-section">
+  <h3 class="ta-section-title"><i class="bi bi-shield-exclamation"></i> {{ t('threat_actors.apt_heading') }}</h3>
+  <div class="ta-card-grid">
+    {% for actor in apt_actors %}
+    <div class="ta-card ta-reveal" data-actor="{{ actor.id }}" style="--ta-delay: {{ loop.index0 * 90 }}ms;">
+      <div class="ta-card-header">
+        <span class="ta-flag">{{ actor.origin_flag }}</span>
+        <div class="ta-card-titles">
+          <div class="ta-card-name">{{ actor.name }}</div>
+          <div class="ta-card-alias">{{ actor.aliases|join(', ') }}</div>
+        </div>
+        <span class="ta-badge ta-badge-{{ 'critical' if actor.sophistication_level >= 5 else 'high' }}">
+          {{ actor.sophistication }}
+        </span>
+      </div>
+      <div class="ta-card-body">
+        <div class="ta-origin"><i class="bi bi-geo-alt"></i> {{ actor.origin }}</div>
+        <p class="ta-motivation">{{ actor.motivation }}</p>
+        <div class="ta-sophistication-bar">
+          <div class="ta-sophistication-fill" data-level="{{ actor.sophistication_level }}"></div>
+        </div>
+      </div>
+      <button class="ta-expand-btn" type="button" data-toggle="ta-detail-{{ actor.id }}">
+        {{ t('threat_actors.view_details') }} <i class="bi bi-chevron-down"></i>
+      </button>
+      <div class="ta-detail" id="ta-detail-{{ actor.id }}">
+        <div class="ta-detail-block">
+          <h6><i class="bi bi-crosshair"></i> {{ t('threat_actors.targets') }}</h6>
+          <ul class="ta-list">
+            {% for target in actor.targets %}<li>{{ target }}</li>{% endfor %}
+          </ul>
+        </div>
+        <div class="ta-detail-block">
+          <h6><i class="bi bi-diagram-3"></i> {{ t('threat_actors.ttps') }}</h6>
+          <div class="ta-chip-row">
+            {% for ttp in actor.ttps %}
+            <span class="ta-chip ta-chip-ttp" style="--pop-delay: {{ loop.index0 * 40 }}ms;" title="{{ ttp.name }}">{{ ttp.id }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="ta-detail-block">
+          <h6><i class="bi bi-bug"></i> {{ t('threat_actors.cves') }}</h6>
+          <div class="ta-chip-row">
+            {% for cve in actor.cves %}
+            <span class="ta-chip ta-chip-cve" style="--pop-delay: {{ loop.index0 * 40 }}ms;">{{ cve }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="ta-detail-block">
+          <h6><i class="bi bi-clock-history"></i> {{ t('threat_actors.notable_attacks') }}</h6>
+          <ul class="ta-list">
+            {% for attack in actor.notable_attacks %}<li>{{ attack }}</li>{% endfor %}
+          </ul>
+        </div>
+        <div class="ta-detail-block ta-relevance">
+          <h6><i class="bi bi-flag"></i> {{ t('threat_actors.az_relevance') }}</h6>
+          <p>{{ actor.az_relevance }}</p>
+        </div>
+        <div class="ta-source">{{ t('common.source') }}: {{ actor.source }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Hacktivist actors -->
+<div class="ta-section">
+  <h3 class="ta-section-title"><i class="bi bi-flag"></i> {{ t('threat_actors.hacktivist_heading') }}</h3>
+  <div class="ta-card-grid ta-card-grid-compact">
+    {% for actor in hacktivist_actors %}
+    <div class="ta-card ta-card-hacktivist ta-reveal" style="--ta-delay: {{ loop.index0 * 90 }}ms;">
+      <div class="ta-card-header">
+        <span class="ta-flag">{{ actor.flag }}</span>
+        <div class="ta-card-titles">
+          <div class="ta-card-name">{{ actor.name }}</div>
+          <div class="ta-card-alias">{{ actor.alignment }}</div>
+        </div>
+      </div>
+      <div class="ta-card-body">
+        <p class="ta-motivation">{{ actor.activity }}</p>
+        <div class="ta-source">{{ t('common.source') }}: {{ actor.source }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Sector distribution -->
+<div class="ta-section">
+  <h3 class="ta-section-title"><i class="bi bi-pie-chart"></i> {{ t('threat_actors.sector_heading') }}</h3>
+  <div class="ta-panel ta-reveal">
+    {% for sector in sector_distribution %}
+    <div class="ta-sector-row">
+      <span class="ta-sector-name">{{ sector.name }}</span>
+      <div class="ta-sector-track">
+        <div class="ta-sector-fill" data-pct="{{ sector.pct }}"></div>
+      </div>
+      <span class="ta-sector-pct" data-count="{{ sector.pct }}">0%</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Incident timeline -->
+<div class="ta-section">
+  <h3 class="ta-section-title"><i class="bi bi-broadcast"></i> {{ t('threat_actors.timeline_heading') }}</h3>
+  <div class="ta-timeline">
+    {% for incident in incidents|reverse %}
+    <div class="ta-timeline-item ta-reveal" style="--ta-delay: {{ loop.index0 * 120 }}ms;">
+      <div class="ta-timeline-dot"></div>
+      <div class="ta-timeline-content">
+        <div class="ta-timeline-date">{{ incident.date_label }}</div>
+        <div class="ta-timeline-title">{{ incident.title }}</div>
+        <p class="ta-timeline-desc">{{ incident.description }}</p>
+        <div class="ta-timeline-attr"><i class="bi bi-person-badge"></i> {{ incident.attribution }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/threat_actors.js') }}"></script>
+{% if open_actor %}
+<script>document.addEventListener('DOMContentLoaded', function () {
+  var el = document.querySelector('[data-actor="{{ open_actor }}"]');
+  if (el) { el.scrollIntoView({behavior: 'smooth', block: 'center'}); el.querySelector('.ta-expand-btn').click(); }
+});</script>
+{% endif %}
+{% endblock %}
