@@ -36,6 +36,9 @@
       <a class="nav-link {% if request.endpoint and 'threat_actors' in request.endpoint %}active{% endif %}" href="{{ url_for('threat_actors.index') }}">
         <i class="bi bi-diagram-3"></i> {{ t('nav.threat_actors') }}
       </a>
+      <a class="nav-link {% if request.endpoint and 'cve_watchlist' in request.endpoint %}active{% endif %}" href="{{ url_for('cve_watchlist.index') }}">
+        <i class="bi bi-bug"></i> {{ t('nav.cve_watchlist') }}
+      </a>
       <a class="nav-link {% if request.endpoint in ('dashboard.settings', 'dashboard.profile', 'dashboard.change_password_page') %}active{% endif %}" href="{{ url_for('dashboard.settings') }}">
         <i class="bi bi-gear"></i> {{ t('nav.settings') }}
       </a>

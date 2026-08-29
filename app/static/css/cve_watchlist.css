@@ -1,0 +1,110 @@
+/* ===== AZ Threat Radar — CVE Watchlist page ===== */
+
+.cve-hero { background: linear-gradient(135deg, #431407 0%, #0f172a 55%, #111827 100%); }
+
+/* ---------- Exposure checklist ---------- */
+.cve-exposure-panel { padding: 20px; }
+.cve-exposure-hint { color: var(--muted); font-size: 0.85rem; margin-bottom: 14px; }
+.cve-exposure-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+.cve-exposure-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.cve-exposure-item:hover { border-color: var(--primary); }
+.cve-exposure-check { accent-color: var(--primary); width: 16px; height: 16px; flex-shrink: 0; }
+.cve-exposure-item.cve-exposure-active {
+  border-color: var(--danger);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* ---------- Toolbar / filter ---------- */
+.cve-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.cve-filter-group { display: flex; gap: 6px; }
+.cve-filter-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.cve-filter-btn:hover { border-color: var(--primary); color: var(--text); }
+.cve-filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* ---------- CVE cards ---------- */
+.cve-card-list { display: flex; flex-direction: column; gap: 12px; }
+.cve-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.cve-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+.cve-card.cve-hidden { display: none; }
+.cve-card.cve-exposed { border-color: var(--danger); box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3); }
+
+.cve-card-id-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.cve-id {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.cve-kev-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cve-product { font-weight: 600; color: var(--text); font-size: 0.92rem; margin-bottom: 4px; }
+.cve-allows { font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; }
+
+.cve-meta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.cve-actor-chip, .cve-due-chip {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+}
+.cve-actor-chip {
+  background: rgba(37, 99, 235, 0.12);
+  color: #93c5fd;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  transition: background 0.2s ease;
+}
+.cve-actor-chip:hover { background: rgba(37, 99, 235, 0.22); color: #93c5fd; }
+.cve-due-chip { background: rgba(245, 158, 11, 0.12); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+.cve-empty-state { text-align: center; color: var(--muted); padding: 24px; }

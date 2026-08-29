@@ -14,6 +14,7 @@ from app.routes.dashboard_routes import dashboard_bp
 from app.routes.history_routes import history_bp
 from app.routes.report_routes import report_bp
 from app.routes.threat_actors_routes import threat_actors_bp
+from app.routes.cve_routes import cve_bp
 from app.i18n import LOCALE_LABELS, SUPPORTED_LOCALES, resolve_locale, translate
 from app.services.auth_service import ensure_demo_user
 
@@ -46,6 +47,7 @@ def create_app():
     app.register_blueprint(history_bp)
     app.register_blueprint(report_bp)
     app.register_blueprint(threat_actors_bp)
+    app.register_blueprint(cve_bp)
     @app.errorhandler(429)
     def ratelimit_handler(_e):
         locale = resolve_locale()

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ t('cve.hero_title') }} — {{ app_name }}{% endblock %}
+{% block page_heading %}{{ t('cve.hero_title') }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/threat_actors.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cve_watchlist.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="ta-hero cve-hero">
+  <div class="ta-hero-grid"></div>
+  <div class="ta-hero-content">
+    <i class="bi bi-bug-fill ta-hero-icon"></i>
+    <h2 class="ta-hero-title">{{ t('cve.hero_title') }}</h2>
+    <p class="ta-hero-sub">{{ t('cve.hero_sub') }}</p>
+    <div class="ta-stat-row">
+      <div class="ta-stat">
+        <div class="ta-stat-value" data-count="{{ cves|length }}">0</div>
+        <div class="ta-stat-label">{{ t('cve.stat_total') }}</div>
+      </div>
+      <div class="ta-stat">
+        <div class="ta-stat-value" data-count="{{ critical_count }}">0</div>
+        <div class="ta-stat-label">{{ t('cve.stat_critical') }}</div>
+      </div>
+      <div class="ta-stat">
+        <div class="ta-stat-value" data-count="{{ kev_count }}">0</div>
+        <div class="ta-stat-label">{{ t('cve.stat_kev') }}</div>
+      </div>
+      <div class="ta-stat">
+        <div class="ta-stat-value" data-count="{{ actors_covered }}">0</div>
+        <div class="ta-stat-label">{{ t('cve.stat_actors') }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Exposure self-check -->
+<div class="ta-section">
+  <h3 class="ta-section-title"><i class="bi bi-clipboard-check"></i> {{ t('cve.exposure_heading') }}</h3>
+  <div class="ta-panel cve-exposure-panel">
+    <p class="cve-exposure-hint">{{ t('cve.exposure_hint') }}</p>
+    <div class="cve-exposure-grid">
+      {% for product in products %}
+      <label class="cve-exposure-item">
+        <input type="checkbox" class="cve-exposure-check" data-product="{{ product }}">
+        <span>{{ product }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Severity filter -->
+<div class="ta-section">
+  <div class="cve-toolbar">
+    <h3 class="ta-section-title mb-0"><i class="bi bi-shield-exclamation"></i> {{ t('cve.list_heading') }}</h3>
+    <div class="cve-filter-group" role="group">
+      <button type="button" class="cve-filter-btn active" data-filter="all">{{ t('cve.filter_all') }}</button>
+      <button type="button" class="cve-filter-btn" data-filter="critical">{{ t('cve.filter_critical') }}</button>
+      <button type="button" class="cve-filter-btn" data-filter="high">{{ t('cve.filter_high') }}</button>
+    </div>
+  </div>
+
+  <div class="cve-card-list">
+    {% for cve in cves %}
+    <div class="cve-card ta-reveal" data-severity="{{ cve.severity }}" data-product="{{ cve.product }}" style="--ta-delay: {{ loop.index0 * 60 }}ms;">
+      <div class="cve-card-main">
+        <div class="cve-card-id-row">
+          <span class="cve-id">{{ cve.id }}</span>
+          <span class="ta-badge ta-badge-{{ 'critical' if cve.severity == 'critical' else 'high' }}">CVSS {{ '%.1f'|format(cve.cvss) }}</span>
+          {% if cve.kev %}<span class="cve-kev-badge"><i class="bi bi-exclamation-octagon-fill"></i> KEV</span>{% endif %}
+        </div>
+        <div class="cve-product">{{ cve.product }}</div>
+        <p class="cve-allows">{{ cve.what_it_allows }}</p>
+        <div class="cve-meta-row">
+          {% if cve.actor_name %}
+          <a href="{{ url_for('threat_actors.detail', actor_id=cve.actor_id) }}" class="cve-actor-chip">
+            <i class="bi bi-person-badge"></i> {{ cve.actor_name }}
+          </a>
+          {% endif %}
+          {% if cve.due_date %}
+          <span class="cve-due-chip"><i class="bi bi-calendar-event"></i> {{ t('cve.due_by') }}: {{ cve.due_date }}</span>
+          {% endif %}
+        </div>
+        <div class="ta-source">{{ t('common.source') }}: {{ cve.source }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="cve-empty-state d-none">{{ t('cve.no_results') }}</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/threat_actors.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cve_watchlist.js') }}"></script>
+{% endblock %}

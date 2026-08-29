@@ -4,6 +4,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/threat_actors.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cve_watchlist.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -39,12 +40,22 @@
 </div>
 
 <div class="row g-3 mb-4">
-  <div class="col-12">
-    <a href="{{ url_for('threat_actors.index') }}" class="ta-teaser text-decoration-none">
+  <div class="col-md-6">
+    <a href="{{ url_for('threat_actors.index') }}" class="ta-teaser text-decoration-none h-100">
       <i class="bi bi-radar ta-teaser-icon"></i>
       <div class="flex-grow-1">
         <div class="ta-teaser-title">{{ t('threat_actors.hero_title') }}</div>
         <div class="ta-teaser-sub">{{ t('threat_actors.teaser_sub') }}</div>
+      </div>
+      <i class="bi bi-arrow-right-circle fs-4 text-primary"></i>
+    </a>
+  </div>
+  <div class="col-md-6">
+    <a href="{{ url_for('cve_watchlist.index') }}" class="ta-teaser text-decoration-none h-100">
+      <i class="bi bi-bug-fill ta-teaser-icon"></i>
+      <div class="flex-grow-1">
+        <div class="ta-teaser-title">{{ t('cve.hero_title') }}</div>
+        <div class="ta-teaser-sub">{{ t('cve.teaser_sub') }}</div>
       </div>
       <i class="bi bi-arrow-right-circle fs-4 text-primary"></i>
     </a>
