@@ -1,3 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ t('nav.dashboard') }} — {{ app_name }}{% endblock %}
+{% block page_heading %}{{ t('dashboard.heading') }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/threat_actors.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cve_watchlist.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="dash-toolbar mb-4">
   <div class="dash-toolbar-search">
