@@ -1,4 +1,5 @@
 from collections import Counter
+from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import login_required, current_user
@@ -23,6 +24,50 @@ def _stats():
     return total, safe, suspicious, malicious
 
 
+def _country_distribution(user_id, limit=5):
+    rows = (
+        db.session.query(ThreatAnalysis.country, db.func.count(ThreatAnalysis.id))
+        .filter(
+            ThreatAnalysis.user_id == user_id,
+            ThreatAnalysis.country.isnot(None),
+            ThreatAnalysis.country != "",
+        )
+        .group_by(ThreatAnalysis.country)
+        .order_by(db.func.count(ThreatAnalysis.id).desc())
+        .limit(limit)
+        .all()
+    )
+    return [{"name": c, "count": n} for c, n in rows]
+
+
+def _daily_activity(user_id, days=14):
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    analyses = ThreatAnalysis.query.filter(
+        ThreatAnalysis.user_id == user_id, ThreatAnalysis.created_at >= since
+    ).all()
+
+    buckets = {}
+    for i in range(days, -1, -1):
+        day = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+        buckets[day] = {"safe": 0, "suspicious": 0, "malicious": 0}
+
+    for a in analyses:
+        created = a.created_at
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        day = created.strftime("%Y-%m-%d")
+        if day in buckets:
+            buckets[day][a.risk_level()] += 1
+
+    labels = list(buckets.keys())
+    return {
+        "labels": labels,
+        "safe": [buckets[d]["safe"] for d in labels],
+        "suspicious": [buckets[d]["suspicious"] for d in labels],
+        "malicious": [buckets[d]["malicious"] for d in labels],
+    }
+
+
 @dashboard_bp.route("/dashboard")
 @login_required
 def index():
@@ -45,12 +90,19 @@ def index():
         for a in recent
     ]
     alerts = [r for r in recent_searches if r["status"] in ("SUSPICIOUS", "MALICIOUS")][:5]
+
+    selected_days = request.args.get("days", 14, type=int)
+    if selected_days not in (1, 7, 14, 30):
+        selected_days = 14
+
     return render_template(
         "dashboard.html",
         stats={"total": total, "safe": safe, "suspicious": suspicious, "malicious": malicious},
         recent_searches=recent_searches,
         recent_alerts=alerts,
         risk_distribution={"safe": safe, "suspicious": suspicious, "malicious": malicious},
+        country_distribution=_country_distribution(current_user.id),
+        selected_days=selected_days,
     )
 
 
@@ -73,6 +125,11 @@ def api_summary():
             if cat and cat != "None":
                 categories[cat] += 1
     top_categories = [{"name": k, "count": v} for k, v in categories.most_common(5)]
+
+    days = request.args.get("days", 14, type=int)
+    if days not in (1, 7, 14, 30):
+        days = 14
+
     return jsonify(
         {
             "stats": {
@@ -82,9 +139,10 @@ def api_summary():
                 "malicious": malicious,
             },
             "top_categories": top_categories,
+            "country_distribution": _country_distribution(current_user.id),
+            "daily_activity": _daily_activity(current_user.id, days=days),
         }
     )
-
 
 @dashboard_bp.route("/settings")
 @login_required

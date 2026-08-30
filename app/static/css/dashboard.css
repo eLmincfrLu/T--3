@@ -1,1 +1,30 @@
-#riskChart, #categoryChart { max-height: 220px; }
+#riskChart, #categoryChart, #countryChart, #activityChart { max-height: 220px; }
+
+.dash-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+}
+.dash-toolbar-search {
+  position: relative;
+  flex: 1 1 240px;
+  max-width: 340px;
+  display: flex;
+  align-items: center;
+}
+.dash-toolbar-search i {
+  position: absolute;
+  left: 0.65rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+.dash-toolbar-search .form-control { padding-left: 2rem; }
+.dash-toolbar-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.dash-range-select { width: auto; min-width: 9rem; }

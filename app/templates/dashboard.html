@@ -1,13 +1,26 @@
-{% extends "base.html" %}
-{% block title %}{{ t('nav.dashboard') }} — {{ app_name }}{% endblock %}
-{% block page_heading %}{{ t('dashboard.heading') }}{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/threat_actors.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/cve_watchlist.css') }}">
-{% endblock %}
-
 {% block content %}
+<div class="dash-toolbar mb-4">
+  <div class="dash-toolbar-search">
+    <i class="bi bi-search"></i>
+    <input type="text" id="tableSearchInput" class="form-control form-control-sm"
+      placeholder="{{ t('dashboard.search_placeholder') }}">
+  </div>
+  <div class="dash-toolbar-actions">
+    <select id="rangeSelect" class="form-select form-select-sm dash-range-select">
+      <option value="1" {% if selected_days == 1 %}selected{% endif %}>{{ t('dashboard.range.24h') }}</option>
+      <option value="7" {% if selected_days == 7 %}selected{% endif %}>{{ t('dashboard.range.7d') }}</option>
+      <option value="14" {% if selected_days == 14 %}selected{% endif %}>{{ t('dashboard.range.14d') }}</option>
+      <option value="30" {% if selected_days == 30 %}selected{% endif %}>{{ t('dashboard.range.30d') }}</option>
+    </select>
+    <button type="button" class="btn btn-sm btn-outline-light" id="refreshDashboardBtn">
+      <i class="bi bi-arrow-clockwise"></i> {{ t('dashboard.refresh') }}
+    </button>
+    <a href="{{ url_for('analysis.analyze_page') }}" class="btn btn-sm btn-primary">
+      <i class="bi bi-plus-lg"></i> {{ t('dashboard.new_analysis') }}
+    </a>
+  </div>
+</div>
+
 <div class="row g-3 mb-4">
   <div class="col-sm-6 col-xl-3">
     <div class="stat-card">
@@ -78,8 +91,8 @@
   </div>
   <div class="col-lg-4">
     <div class="panel-card h-100">
-      <div class="panel-header">{{ t('dashboard.top_categories') }}</div>
-      <canvas id="categoryChart" height="220"></canvas>
+      <div class="panel-header">{{ t('dashboard.top_regions') }}</div>
+      <canvas id="countryChart" height="220"></canvas>
     </div>
   </div>
   <div class="col-lg-4">
@@ -101,6 +114,24 @@
 </div>
 
 <div class="row g-3 mt-1">
+  <div class="col-lg-8">
+    <div class="panel-card h-100">
+      <div class="panel-header">{{ t('dashboard.activity_over_time') }}</div>
+      <canvas id="activityChart" height="220"
+        data-label-safe="{{ t('status.safe') }}"
+        data-label-suspicious="{{ t('status.suspicious') }}"
+        data-label-malicious="{{ t('status.malicious') }}"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="panel-card h-100">
+      <div class="panel-header">{{ t('dashboard.top_categories') }}</div>
+      <canvas id="categoryChart" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1">
   <div class="col-12">
     <div class="panel-card">
       <div class="panel-header d-flex justify-content-between align-items-center">
@@ -108,7 +139,7 @@
         <a href="{{ url_for('analysis.analyze_page') }}" class="btn btn-sm btn-primary">{{ t('dashboard.new_analysis') }}</a>
       </div>
       <div class="table-responsive">
-        <table class="table table-dark table-hover tip-table mb-0">
+        <table class="table table-dark table-hover tip-table mb-0" id="recentSearchesTable">
           <thead>
             <tr>
               <th>{{ t('common.target') }}</th>
@@ -121,7 +152,7 @@
           </thead>
           <tbody>
             {% for row in recent_searches %}
-            <tr>
+            <tr data-target="{{ row.target|lower }}">
               <td class="font-monospace">{{ row.target }}</td>
               <td><span class="badge badge-muted">{{ row.type|upper }}</span></td>
               <td>

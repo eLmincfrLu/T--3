@@ -301,30 +301,45 @@ body.app-body {
 .panel-card, .stat-card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.25rem;
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem 1.25rem;
 }
 
 .panel-header {
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 1rem;
-  font-size: 0.95rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
 }
 
-.stat-card { position: relative; overflow: hidden; }
-.stat-label { color: var(--muted); font-size: 0.85rem; }
-.stat-value { font-size: 2rem; font-weight: 700; line-height: 1.2; }
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  border-top: 3px solid var(--primary);
+  padding-top: 1rem;
+}
+.stat-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.stat-value { font-size: 2rem; font-weight: 700; line-height: 1.2; margin-top: 0.2rem; }
 .stat-icon {
   position: absolute;
   right: 1rem;
   top: 50%;
   transform: translateY(-50%);
   font-size: 2rem;
-  opacity: 0.15;
+  opacity: 0.12;
 }
-.stat-safe { border-color: rgba(34, 197, 94, 0.35); }
-.stat-warning { border-color: rgba(245, 158, 11, 0.35); }
-.stat-danger { border-color: rgba(239, 68, 68, 0.35); }
+.stat-safe { border-top-color: var(--success); }
+.stat-warning { border-top-color: var(--warning); }
+.stat-danger { border-top-color: var(--danger); }
 
 .badge-safe, .badge-safe.badge { background: rgba(34, 197, 94, 0.2); color: var(--success); }
 .badge-suspicious, .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
@@ -334,11 +349,15 @@ body.app-body {
 .tip-table { --bs-table-bg: transparent; --bs-table-color: var(--text); }
 .tip-table thead th {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   border-bottom-color: var(--border);
+  padding-bottom: 0.75rem;
 }
+.tip-table tbody td { padding-top: 0.6rem; padding-bottom: 0.6rem; vertical-align: middle; }
+.tip-table tbody tr { transition: background 0.12s ease; }
+.tip-table.table-hover tbody tr:hover { background: var(--soft-bg) !important; }
 
 .form-control, .form-select {
   background: var(--input-bg);
@@ -393,10 +412,14 @@ body.app-body {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.25rem 0.75rem;
-  padding: 0.65rem 0;
+  padding: 0.65rem 0.4rem;
   border-bottom: 1px solid var(--border);
   align-items: center;
+  border-radius: 6px;
+  transition: background 0.12s ease;
 }
+.alert-list li:hover { background: var(--soft-bg); }
+.alert-list li:last-child { border-bottom: none; }
 .alert-list li small { grid-column: 2; }
 
 .lang-switcher-btn {
