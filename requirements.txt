@@ -31,3 +31,5 @@ urllib3==2.7.0
 Werkzeug==3.0.3
 wrapt==2.3.0
 pyngrok==7.2.3
+pyotp==2.9.0
+qrcode==7.4.2

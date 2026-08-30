@@ -1,12 +1,14 @@
 from collections import Counter
 
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import login_required, current_user
 
 from app.i18n import resolve_locale, translate
 from app.models.threat_analysis import ThreatAnalysis
 from app.services.auth_service import change_password, update_profile
+from app.services.twofa_service import confirm_2fa_setup, disable_2fa, start_2fa_setup
 from app.utils.helpers import utc_iso
+from app.utils.security import verify_password
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -127,3 +129,43 @@ def change_password_page():
                 flash(translate(locale, "settings.password_changed"), "success")
                 return redirect(url_for("dashboard.profile"))
     return render_template("change_password.html")
+
+
+@dashboard_bp.route("/profile/2fa/setup", methods=["GET", "POST"])
+@login_required
+def twofa_setup():
+    locale = resolve_locale()
+    if request.method == "POST":
+        code = request.form.get("code", "")
+        backup_codes = confirm_2fa_setup(current_user, code)
+        if backup_codes:
+            # Shown exactly once — stashed in the session and popped by
+            # twofa_backup_codes() the moment that page is rendered.
+            session["new_backup_codes"] = backup_codes
+            flash(translate(locale, "twofa.enabled_success"), "success")
+            return redirect(url_for("dashboard.twofa_backup_codes"))
+        flash(translate(locale, "twofa.invalid_code"), "danger")
+    secret, qr_data_uri = start_2fa_setup(current_user)
+    return render_template("twofa_setup.html", secret=secret, qr_data_uri=qr_data_uri)
+
+
+@dashboard_bp.route("/profile/2fa/backup-codes")
+@login_required
+def twofa_backup_codes():
+    codes = session.pop("new_backup_codes", None)
+    return render_template("twofa_backup_codes.html", codes=codes)
+
+
+@dashboard_bp.route("/profile/2fa/disable", methods=["GET", "POST"])
+@login_required
+def twofa_disable():
+    locale = resolve_locale()
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        if not verify_password(current_user.password_hash, password):
+            flash(translate(locale, "settings.current_password_wrong"), "danger")
+        else:
+            disable_2fa(current_user)
+            flash(translate(locale, "twofa.disabled_success"), "success")
+            return redirect(url_for("dashboard.profile"))
+    return render_template("twofa_disable.html")

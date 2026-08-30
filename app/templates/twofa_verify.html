@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ t('twofa.verify_title') }} — {{ app_name }}{% endblock %}
+
+{% block auth_content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<header class="auth-topbar">
+  <div class="auth-topbar-brand">
+    <i class="bi bi-shield-lock-fill"></i>
+    <span>{{ app_name }}</span>
+  </div>
+  {% include "partials/language_switcher.html" %}
+</header>
+<div class="auth-page">
+  <div class="auth-grid"></div>
+  <div class="auth-card">
+    <div class="auth-logo">
+      <i class="bi bi-shield-check"></i>
+    </div>
+    <h1 class="auth-title">{{ t('twofa.verify_title') }}</h1>
+    <p class="auth-subtitle">{{ t('twofa.verify_subtitle') }}</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="post" action="{{ url_for('auth.login_2fa') }}" id="twofaForm" novalidate>
+      <div class="mb-4">
+        <label class="form-label" for="code">{{ t('twofa.code_label') }}</label>
+        <input type="text" class="form-control auth-input text-center" id="code" name="code" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" maxlength="9" autofocus required>
+        <p class="text-muted small mt-2 mb-0">{{ t('twofa.backup_hint') }}</p>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 auth-btn" id="twofaBtn">
+        <span class="btn-label">{{ t('twofa.verify_submit') }}</span>
+        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+      </button>
+    </form>
+    <p class="auth-switch mt-4 mb-0">
+      <a href="{{ url_for('auth.login') }}">{{ t('verify.back_to_login') }}</a>
+    </p>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

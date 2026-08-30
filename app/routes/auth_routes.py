@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from app.extensions import limiter
@@ -15,6 +15,7 @@ from app.services.auth_service import (
     send_password_reset_email,
     send_verification_email,
 )
+from app.services.twofa_service import verify_2fa_code
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -41,6 +42,16 @@ def login():
             if not user.email_verified:
                 flash(translate(locale, "login.email_not_verified"), "warning")
                 return redirect(url_for("auth.verify_pending", email=user.email))
+            if user.is_2fa_enabled:
+                # Don't log the user in yet — stash the pending identity in
+                # the session and route through the 2FA code-entry step.
+                # login_user() only happens after verify_2fa_code() succeeds.
+                session["pending_2fa_user_id"] = user.id
+                session["pending_2fa_remember"] = remember
+                next_url = request.args.get("next")
+                if next_url:
+                    session["pending_2fa_next"] = next_url
+                return redirect(url_for("auth.login_2fa"))
             login_user(user, remember=remember)
             next_url = request.args.get("next")
             return redirect(next_url or url_for("dashboard.index"))
@@ -163,6 +174,30 @@ def reset_password_page(token):
                 flash(translate(locale, "reset.success"), "success")
                 return redirect(url_for("auth.login"))
     return render_template("reset_password.html", token=token)
+
+
+@auth_bp.route("/login/2fa", methods=["GET", "POST"])
+# Brute-force protection on the 6-digit code, same spirit as the login form.
+@limiter.limit("10 per minute", methods=["POST"])
+def login_2fa():
+    locale = resolve_locale()
+    user_id = session.get("pending_2fa_user_id")
+    if not user_id:
+        return redirect(url_for("auth.login"))
+    user = User.query.get(user_id)
+    if not user or not user.is_2fa_enabled:
+        session.pop("pending_2fa_user_id", None)
+        return redirect(url_for("auth.login"))
+    if request.method == "POST":
+        code = request.form.get("code", "")
+        if verify_2fa_code(user, code):
+            remember = session.pop("pending_2fa_remember", False)
+            next_url = session.pop("pending_2fa_next", None)
+            session.pop("pending_2fa_user_id", None)
+            login_user(user, remember=remember)
+            return redirect(next_url or url_for("dashboard.index"))
+        flash(translate(locale, "twofa.invalid_code"), "danger")
+    return render_template("twofa_verify.html")
 
 
 @auth_bp.route("/set-language/<lang>")

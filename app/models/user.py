@@ -12,5 +12,8 @@ class User(UserMixin, db.Model):
     full_name = db.Column(db.String(255), nullable=False, default="")
     position = db.Column(db.String(255), nullable=False, default="")
     email_verified = db.Column(db.Boolean, nullable=False, default=False)
+    totp_secret = db.Column(db.String(64), nullable=True)
+    is_2fa_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    backup_codes = db.Column(db.Text, nullable=True)
 
     search_history = db.relationship("SearchHistory", back_populates="user", lazy="dynamic")

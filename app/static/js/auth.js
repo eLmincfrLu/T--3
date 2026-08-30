@@ -80,5 +80,6 @@ bindAuthForm("loginForm", "loginBtn");
 bindAuthForm("registerForm", "registerBtn");
 bindAuthForm("forgotPasswordForm", "forgotPasswordBtn");
 bindAuthForm("resetPasswordForm", "resetPasswordBtn");
+bindAuthForm("twofaForm", "twofaBtn");
 bindPasswordToggles();
 bindGeneratePasswordButtons();

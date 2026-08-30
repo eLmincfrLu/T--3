@@ -38,7 +38,11 @@
     <div class="panel-card">
       <div class="panel-header">{{ t('settings.security') }}</div>
       <a href="{{ url_for('dashboard.change_password_page') }}" class="btn btn-outline-light btn-sm">{{ t('settings.change_password') }}</a>
-      <button class="btn btn-outline-light btn-sm ms-2" disabled>{{ t('settings.enable_2fa') }}</button>
+      {% if current_user.is_2fa_enabled %}
+      <span class="twofa-status-badge ms-2"><i class="bi bi-shield-check"></i> {{ t('twofa.status_enabled') }}</span>
+      {% else %}
+      <a href="{{ url_for('dashboard.twofa_setup') }}" class="btn btn-outline-light btn-sm ms-2">{{ t('settings.enable_2fa') }}</a>
+      {% endif %}
     </div>
   </div>
   <div class="col-lg-6">

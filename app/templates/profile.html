@@ -60,9 +60,14 @@
         </div>
       </form>
       <hr class="my-4" style="border-color: var(--border);">
-      <div class="d-flex gap-2 flex-wrap">
+      <div class="d-flex gap-2 flex-wrap align-items-center">
         <a href="{{ url_for('dashboard.change_password_page') }}" class="btn btn-outline-light btn-sm">{{ t('settings.change_password') }}</a>
-        <button class="btn btn-outline-light btn-sm" disabled>{{ t('settings.enable_2fa') }}</button>
+        {% if current_user.is_2fa_enabled %}
+        <span class="twofa-status-badge"><i class="bi bi-shield-check"></i> {{ t('twofa.status_enabled') }}</span>
+        <a href="{{ url_for('dashboard.twofa_disable') }}" class="btn btn-outline-danger btn-sm">{{ t('twofa.disable_button') }}</a>
+        {% else %}
+        <a href="{{ url_for('dashboard.twofa_setup') }}" class="btn btn-outline-light btn-sm">{{ t('settings.enable_2fa') }}</a>
+        {% endif %}
       </div>
     </div>
   </div>

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ t('twofa.backup_codes_title') }} — {{ app_name }}{% endblock %}
+{% block page_heading %}{{ t('twofa.backup_codes_title') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center g-3">
+  <div class="col-lg-7">
+    <div class="panel-card">
+      {% if codes %}
+      <div class="alert alert-warning py-2">{{ t('twofa.backup_codes_warning') }}</div>
+      <div class="twofa-codes-grid">
+        {% for code in codes %}
+        <code class="twofa-code-chip">{{ code }}</code>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted">{{ t('twofa.backup_codes_already_shown') }}</p>
+      {% endif %}
+      <a href="{{ url_for('dashboard.profile') }}" class="btn btn-primary mt-3">{{ t('twofa.backup_codes_continue') }}</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

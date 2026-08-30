@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "partials/password_input.html" import password_input %}
+{% block title %}{{ t('twofa.disable_title') }} — {{ app_name }}{% endblock %}
+{% block page_heading %}{{ t('twofa.disable_title') }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('dashboard.profile') }}" class="btn btn-sm btn-outline-light">
+  <i class="bi bi-arrow-left"></i> {{ t('settings.back') }}
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center g-3">
+  <div class="col-lg-6">
+    <div class="panel-card">
+      <p class="text-muted">{{ t('twofa.disable_warning') }}</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      <form method="post" action="{{ url_for('dashboard.twofa_disable') }}">
+        <div class="mb-3">
+          <label class="form-label" for="password">{{ t('settings.current_password') }}</label>
+          {{ password_input('password', 'password', '', '', true, 'current-password') }}
+        </div>
+        <button type="submit" class="btn btn-danger">{{ t('twofa.disable_submit') }}</button>
+        <a href="{{ url_for('dashboard.profile') }}" class="btn btn-outline-light">{{ t('common.cancel') }}</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
