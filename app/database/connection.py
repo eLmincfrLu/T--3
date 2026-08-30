@@ -16,6 +16,14 @@ def init_db(app):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
     app.config.setdefault("SQLALCHEMY_DATABASE_URI", database_url)
     app.config.setdefault("SQLALCHEMY_TRACK_MODIFICATIONS", False)
+    # Neon/serverless Postgres suspends its compute after inactivity and
+    # silently drops idle connections. pool_pre_ping tests each connection
+    # right before use and transparently reconnects if it's gone, instead
+    # of raising "SSL connection has been closed unexpectedly".
+    app.config.setdefault("SQLALCHEMY_ENGINE_OPTIONS", {
+        "pool_pre_ping": True,
+        "pool_recycle": 280,
+    })
     db.init_app(app)
 
 
