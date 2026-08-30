@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask, flash, redirect, request, url_for
 from flask_login import LoginManager
 
-from app.database.connection import db, init_db
+from app.database.connection import db, init_db, run_lightweight_migrations
 from app.extensions import limiter
 from app.models.user import User
 from app.routes.analysis_routes import analysis_bp
@@ -17,6 +17,7 @@ from app.routes.threat_actors_routes import threat_actors_bp
 from app.routes.cve_routes import cve_bp
 from app.i18n import LOCALE_LABELS, SUPPORTED_LOCALES, resolve_locale, translate
 from app.services.auth_service import ensure_demo_user
+from app.services.scheduler_service import init_scheduler
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
@@ -71,7 +72,10 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        run_lightweight_migrations()
         ensure_demo_user()
+
+    init_scheduler(app)
 
     return app
 

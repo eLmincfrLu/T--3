@@ -5,6 +5,7 @@ from app.database.connection import db
 from app.models.search_history import SearchHistory
 from app.models.threat_analysis import ThreatAnalysis
 from app.services.threat_service import analyze_target
+from app.services.notification_service import maybe_send_malicious_alert
 from app.services.virustotal_service import VirusTotalError
 from app.i18n import resolve_locale, translate
 from app.utils.helpers import deserialize_payload, serialize_payload
@@ -46,6 +47,7 @@ def analyze_page():
             SearchHistory(analysis_id=analysis.id, user_id=current_user.id)
         )
         db.session.commit()
+        maybe_send_malicious_alert(current_user, analysis, resolve_locale())
         return redirect(url_for("analysis.result", analysis_id=analysis.id))
     return render_template("analysis.html")
 
@@ -92,5 +94,6 @@ def api_analyze():
     db.session.flush()
     db.session.add(SearchHistory(analysis_id=analysis.id, user_id=current_user.id))
     db.session.commit()
+    maybe_send_malicious_alert(current_user, analysis, resolve_locale())
     result["analysis_id"] = analysis.id
     return result

@@ -82,3 +82,49 @@ def build_password_reset_email(link: str, heading: str, body: str, action_line: 
           {link}
         </div>
     """)
+
+
+def build_malicious_alert_email(link: str, heading: str, body: str, target_label: str, target: str,
+                                 risk_label: str, risk_score: int, button_label: str) -> str:
+    return _brand_wrapper(f"""
+        <div style="display: inline-block; background: #fee2e2; color: #b91c1c; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; margin-bottom: 12px;">
+          {risk_label}
+        </div>
+        <h2 style="margin: 0 0 12px; font-size: 18px; color: #0f172a;">{heading}</h2>
+        <p style="margin: 0 0 16px;">{body}</p>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;">
+          <div style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">{target_label}</div>
+          <div style="font-family: monospace; font-size: 14px; color: #0f172a; word-break: break-all; margin-bottom: 10px;">{target}</div>
+          <div style="font-size: 12px; color: #64748b;">{risk_label}: <strong style="color: #b91c1c;">{risk_score}/100</strong></div>
+        </div>
+        <div style="text-align: center;">
+          <a href="{link}" target="_blank" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
+            {button_label}
+          </a>
+        </div>
+    """)
+
+
+def build_weekly_summary_email(link: str, heading: str, body: str, stat_rows: list[tuple[str, str, str]],
+                                button_label: str) -> str:
+    rows_html = "".join(
+        f"""
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; color: #334155;">{label}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 700; color: {color};">{value}</td>
+        </tr>
+        """
+        for label, value, color in stat_rows
+    )
+    return _brand_wrapper(f"""
+        <h2 style="margin: 0 0 12px; font-size: 18px; color: #0f172a;">{heading}</h2>
+        <p style="margin: 0 0 16px;">{body}</p>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          {rows_html}
+        </table>
+        <div style="text-align: center;">
+          <a href="{link}" target="_blank" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
+            {button_label}
+          </a>
+        </div>
+    """)

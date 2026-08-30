@@ -4,6 +4,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from flask_login import login_required, current_user
 
 from app.i18n import resolve_locale, translate
+from app.database.connection import db
 from app.models.threat_analysis import ThreatAnalysis
 from app.services.auth_service import change_password, update_profile
 from app.services.twofa_service import confirm_2fa_setup, disable_2fa, start_2fa_setup
@@ -89,6 +90,24 @@ def api_summary():
 @login_required
 def settings():
     return render_template("settings.html")
+
+
+@dashboard_bp.route("/api/settings/notifications", methods=["POST"])
+@login_required
+def update_notification_settings():
+    body = request.get_json(silent=True) or {}
+    if "malicious" in body:
+        current_user.notify_malicious_email = bool(body["malicious"])
+    if "weekly" in body:
+        current_user.notify_weekly_summary = bool(body["weekly"])
+    db.session.commit()
+    return jsonify(
+        {
+            "ok": True,
+            "malicious": current_user.notify_malicious_email,
+            "weekly": current_user.notify_weekly_summary,
+        }
+    )
 
 
 @dashboard_bp.route("/profile")
