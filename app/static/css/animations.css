@@ -1,0 +1,216 @@
+/* ============================================================
+   TIP — Global Animation System
+   Site-wide scroll & interaction animations, layered on top of
+   style.css. Loaded on every page via base.html.
+   ============================================================ */
+
+:root {
+  --anim-fast: 0.2s;
+  --anim-base: 0.4s;
+  --anim-slow: 0.7s;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html { scroll-behavior: smooth; }
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary), #1e40af);
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+
+/* ---------- Scroll progress bar (injected by animations.js) ---------- */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+  background: linear-gradient(90deg, var(--primary), #38bdf8, var(--primary));
+  background-size: 200% auto;
+  z-index: 2000;
+  animation: progressShine 3s linear infinite;
+  transition: width 0.1s linear;
+}
+@keyframes progressShine { to { background-position: -200% center; } }
+
+/* ---------- Back-to-top button (injected by animations.js) ---------- */
+.back-to-top {
+  position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 1500;
+  width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--primary), #1e40af);
+  color: #fff; border: none; box-shadow: 0 10px 26px rgba(37,99,235,0.4);
+  cursor: pointer;
+  opacity: 0; pointer-events: none;
+  transform: translateY(16px) scale(0.85);
+  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-spring), box-shadow 0.2s ease;
+}
+.back-to-top.is-visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+.back-to-top:hover { transform: translateY(-4px) scale(1.06); box-shadow: 0 14px 32px rgba(37,99,235,0.55); }
+.back-to-top i { animation: bounceArrow 1.6s ease-in-out infinite; }
+@keyframes bounceArrow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+/* ---------- Page load ---------- */
+body.app-body { animation: pageFadeIn 0.5s var(--ease-out) both; }
+@keyframes pageFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.app-shell .content-area { animation: contentRise 0.55s var(--ease-out) both; }
+@keyframes contentRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar { animation: slideInLeftFade 0.5s var(--ease-out) both; }
+@keyframes slideInLeftFade {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.sidebar-nav .nav-link {
+  position: relative;
+  overflow: hidden;
+  transition: background var(--anim-fast) ease, color var(--anim-fast) ease,
+              transform var(--anim-fast) ease, padding-left var(--anim-fast) ease;
+}
+.sidebar-nav .nav-link i { display: inline-block; transition: transform var(--anim-fast) var(--ease-spring); }
+.sidebar-nav .nav-link:hover { transform: translateX(4px); padding-left: 0.95rem; }
+.sidebar-nav .nav-link:hover i { transform: scale(1.18) rotate(-4deg); }
+.sidebar-nav .nav-link::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--primary); border-radius: 0 3px 3px 0;
+  transform: scaleY(0); transition: transform var(--anim-fast) var(--ease-spring);
+}
+.sidebar-nav .nav-link:hover::before,
+.sidebar-nav .nav-link.active::before { transform: scaleY(1); }
+
+.brand-icon {
+  transition: transform 0.4s var(--ease-spring);
+  animation: brandFloat 3.5s ease-in-out infinite;
+}
+.sidebar-brand:hover .brand-icon { transform: rotate(-8deg) scale(1.1); }
+@keyframes brandFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+/* ---------- Topbar ---------- */
+.topbar { transition: box-shadow 0.3s ease; }
+.topbar.is-scrolled { box-shadow: 0 8px 22px rgba(0,0,0,0.25); }
+.page-heading { animation: fadeInUpSm 0.5s var(--ease-out) both; }
+@keyframes fadeInUpSm { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ---------- Scroll-reveal engine ----------
+   JS tags elements with data-reveal + sets --reveal-delay, then
+   toggles .is-visible via IntersectionObserver. Using `animation`
+   (not `transition`) here deliberately, so this never fights with
+   page-specific hover `transition` rules declared elsewhere. */
+[data-reveal] { opacity: 0; }
+[data-reveal=""], [data-reveal="up"] { transform: translateY(28px); }
+[data-reveal="left"] { transform: translateX(-32px); }
+[data-reveal="right"] { transform: translateX(32px); }
+[data-reveal="scale"] { transform: scale(0.92); }
+
+[data-reveal].is-visible {
+  animation-duration: 0.7s;
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+  animation-delay: var(--reveal-delay, 0s);
+}
+[data-reveal=""].is-visible, [data-reveal="up"].is-visible { animation-name: revealUp; }
+[data-reveal="left"].is-visible { animation-name: revealLeft; }
+[data-reveal="right"].is-visible { animation-name: revealRight; }
+[data-reveal="scale"].is-visible { animation-name: revealScale; }
+
+@keyframes revealUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes revealLeft { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes revealRight { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes revealScale { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+
+/* ---------- Cards ---------- */
+.panel-card, .stat-card, .feature-card, .twofa-step, .profile-link-card, .twofa-code-chip {
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), border-color 0.3s ease;
+}
+.panel-card:hover, .stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 34px rgba(0,0,0,0.28);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+.twofa-code-chip:hover { transform: translateY(-2px) scale(1.03); border-color: var(--primary); }
+.stat-icon { transition: transform 0.4s var(--ease-spring); }
+.stat-card:hover .stat-icon { transform: translateY(-52%) scale(1.15) rotate(-6deg); }
+
+/* ---------- Buttons ---------- */
+.btn { position: relative; overflow: hidden; transition: transform 0.2s var(--ease-out), box-shadow 0.2s ease, background 0.2s ease; }
+.btn:active { transform: scale(0.96); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35); }
+.btn > .ripple {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: rgba(255, 255, 255, 0.45); transform: scale(0);
+  animation: rippleAnim 0.6s ease-out;
+}
+@keyframes rippleAnim { to { transform: scale(2.6); opacity: 0; } }
+
+/* ---------- Badges ---------- */
+.badge-danger, .badge-malicious { animation: badgePulseDanger 2s ease-in-out infinite; }
+@keyframes badgePulseDanger {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+  50% { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+}
+
+/* ---------- Tables ---------- */
+.tip-table tbody tr, table.table tbody tr {
+  animation: rowFadeIn 0.4s var(--ease-out) both;
+  animation-delay: calc(var(--row-i, 0) * 0.035s);
+  transition: background 0.2s ease;
+}
+@keyframes rowFadeIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.tip-table tbody tr:hover, table.table tbody tr:hover { background: rgba(37, 99, 235, 0.06); }
+
+/* ---------- Alerts / toasts ---------- */
+.alert { animation: alertPop 0.4s var(--ease-spring) both; }
+@keyframes alertPop {
+  from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.toast { animation: toastSlideIn 0.4s var(--ease-out) both; }
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ---------- Forms ---------- */
+.form-control, .form-select {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+.form-control:focus, .form-select:focus { transform: translateY(-1px); }
+.form-check-input { transition: transform 0.2s var(--ease-spring), background 0.2s ease, border-color 0.2s ease; }
+.form-check-input:checked { transform: scale(1.08); }
+
+/* ---------- Dropdowns ---------- */
+.dropdown-menu.show { animation: dropdownPop 0.22s var(--ease-spring) both; transform-origin: top center; }
+@keyframes dropdownPop {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.user-menu-dropdown.show { transform-origin: bottom center; }
+
+/* ---------- Progress bars ---------- */
+.progress.risk-bar::before { transition: width 1s var(--ease-out); }
+
+/* ---------- Links / nav generic ---------- */
+a { transition: color 0.2s ease; }
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+}
