@@ -8,11 +8,11 @@ TRANSLATIONS = {
         "nav.settings": "Parametrlər",
         "nav.my_profile": "Mənim Profilim",
         "nav.logout": "Çıxış",
-        "nav.threat_actors": "Təhdid Aktorları",
-        "nav.cve_watchlist": "Zəifliklər",
+        "nav.threat_actors": "Təhdid Qrupları",
+        "nav.cve_watchlist": "Zəiflik Monitorinqi",
         "brand.sub": "Təhdid Kəşfi",
         # Threat Actors
-        "threat_actors.hero_title": "Təhdid Aktorları",
+        "threat_actors.hero_title": "Təhdid Qrupları",
         "threat_actors.hero_sub": "Azərbaycanı hədəf alan dövlət dəstəkli APT qrupları və hakerlik/hacktivist kollektivlər üzrə kəşfiyyat profilləri.",
         "threat_actors.teaser_sub": "APT29, MuddyWater, FamousSparrow və regional hakerlik qrupları üzrə profillər, TTP-lər və hadisə xronologiyası.",
         "threat_actors.stat_apt": "APT Qrupu",
@@ -30,7 +30,7 @@ TRANSLATIONS = {
         "threat_actors.notable_attacks": "Məşhur Hücumlar",
         "threat_actors.az_relevance": "Azərbaycana Aidiyyəti",
         # CVE Watchlist
-        "cve.hero_title": "Zəiflik Gözləmə Paneli",
+        "cve.hero_title": "Zəiflik Monitorinqi",
         "cve.hero_sub": "Profilləşdirilmiş APT qrupları tərəfindən real şəraitdə istismar edilmiş, prioritetli CVE-lər (CISA KEV siyahısı ilə birlikdə).",
         "cve.teaser_sub": "16 prioritetli CVE, CVSS skorları, CISA KEV statusu və aktivə uyğun 'sizə aiddirmi?' yoxlaması.",
         "cve.stat_total": "Ümumi CVE",

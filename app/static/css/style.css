@@ -9,6 +9,13 @@
   --text: #f8fafc;
   --muted: #94a3b8;
   --sidebar-w: 260px;
+  /* Theme-aware surfaces used by inputs, the topbar, and soft highlight
+     boxes (2FA key/codes). These used to be hardcoded dark values that
+     never changed in light mode — that's what caused unreadable
+     dark-on-dark and mismatched-color glitches when switching themes. */
+  --input-bg: #0b1220;
+  --topbar-bg: rgba(17, 24, 39, 0.85);
+  --soft-bg: rgba(255, 255, 255, 0.03);
 }
 
 [data-theme="light"] {
@@ -16,10 +23,19 @@
   --card: #ffffff;
   --border: #e2e8f0;
   --text: #0f172a;
-  --muted: #64748b;
+  --muted: #475569;
+  --input-bg: #ffffff;
+  --topbar-bg: rgba(255, 255, 255, 0.85);
+  --soft-bg: rgba(15, 23, 42, 0.035);
 }
 
 * { box-sizing: border-box; }
+
+/* Bootstrap's own .text-muted ignores our theme entirely and reads as
+   near-invisible on the dark background (and mismatched on light) — this
+   is the "grey text you can barely see" issue showing up across almost
+   every page (profile name/email, table dates, hints, etc). */
+.text-muted { color: var(--muted) !important; }
 
 body.app-body {
   margin: 0;
@@ -215,7 +231,7 @@ body.app-body {
   gap: 1rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border);
-  background: rgba(17, 24, 39, 0.85);
+  background: var(--topbar-bg);
   backdrop-filter: blur(8px);
   position: sticky;
   top: 0;
@@ -325,15 +341,19 @@ body.app-body {
 }
 
 .form-control, .form-select {
-  background: #0b1220;
+  background: var(--input-bg);
   border-color: var(--border);
   color: var(--text);
 }
 .form-control:focus, .form-select:focus {
-  background: #0b1220;
+  background: var(--input-bg);
   border-color: var(--primary);
   color: var(--text);
   box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+.form-select option {
+  background: var(--card);
+  color: var(--text);
 }
 
 .btn-primary {
@@ -482,7 +502,7 @@ input[type="password"]::-ms-clear {
   gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--soft-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 14px;
@@ -503,7 +523,7 @@ input[type="password"]::-ms-clear {
 
 .twofa-code-chip {
   text-align: center;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--soft-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px;
