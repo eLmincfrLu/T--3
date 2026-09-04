@@ -41,3 +41,10 @@ def _join_issue_labels(labels: list[str], locale: str) -> str:
 def format_password_errors(locale: str, error_keys: list[str]) -> str:
     labels = [translate(locale, key) for key in error_keys]
     return translate(locale, "validation.password_issues", issues=_join_issue_labels(labels, locale))
+
+
+def localize(value, locale: str):
+    """Resolve a {"az":..,"en":..,"ru":..} dict (or list of such) to a plain value."""
+    if isinstance(value, dict) and DEFAULT_LOCALE in value:
+        return value.get(locale) or value.get(DEFAULT_LOCALE)
+    return value

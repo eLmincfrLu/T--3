@@ -37,7 +37,7 @@
   var backToTop = document.createElement("button");
   backToTop.type = "button";
   backToTop.className = "back-to-top";
-  backToTop.setAttribute("aria-label", "Yuxarı qayıt");
+  backToTop.setAttribute("aria-label", (window.I18N && window.I18N.backToTop) || "Back to top");
   backToTop.innerHTML = '<i class="bi bi-arrow-up"></i>';
   backToTop.addEventListener("click", function () {
     window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/password_input.html" import password_input %}
+{% from "partials/password_input.html" import password_input with context %}
 {% block title %}{{ t('register.submit') }} — {{ app_name }}{% endblock %}
 
 {% block auth_content %}
