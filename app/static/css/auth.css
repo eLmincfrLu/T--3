@@ -29,6 +29,14 @@
   gap: 0.5rem;
   font-weight: 600;
   color: var(--text);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.auth-topbar-brand:hover,
+.auth-topbar-brand:focus {
+  color: var(--text);
+  opacity: 0.8;
 }
 
 .auth-topbar-brand i {
