@@ -241,8 +241,6 @@ cp .env.example .env
 > | `APP_URL` | Fon tapşırığından (scheduler) göndərilən e-maillərdəki linklər üçün (məs. `http://localhost:5000`) |
 > | `RATELIMIT_STORAGE_URI` | Lokal işə salma üçün `memory://` kifayətdir; production üçün Redis tövsiyə olunur |
 
-> [!WARNING]
-> `.env.example` faylında hazırda real görünən bir `VIRUSTOTAL_API_KEY` dəyəri var — bu, ehtimal ki, təsadüfən commit olunub. Repo-nu public edərkən həmin açarı VirusTotal panelindən ləğv edib (**revoke**) öz `.env` faylınızda yenisini istifadə edin; `.env.example`-də isə yalnız boş/placeholder dəyər qalmalıdır.
 
 ---
 
