@@ -48,26 +48,31 @@ def verify_email_verification_token(token: str, max_age: int = EMAIL_VERIFY_MAX_
         return None, False
 
 
-def generate_password_reset_token(email: str) -> str:
-    return _serializer().dumps(email.strip().lower(), salt=PASSWORD_RESET_SALT)
+def generate_password_reset_token(email: str, password_hash: str) -> str:
+    payload = {"email": email.strip().lower(), "pwh": password_hash[-16:]}
+    return _serializer().dumps(payload, salt=PASSWORD_RESET_SALT)
 
 
 def verify_password_reset_token(token: str, max_age: int = PASSWORD_RESET_MAX_AGE):
-    """Same contract as verify_email_verification_token, but for the
-    password-reset flow and a shorter max_age (see PASSWORD_RESET_MAX_AGE).
-    Returns (email, expired):
-    - (email, False): token valid and unexpired.
-    - (email, True): token was valid but has expired.
-    - (None, False): token invalid/tampered.
-    """
+    """Returns (email, pwh_fingerprint, expired). Caller (auth_service.py)
+    must compare pwh against the user's CURRENT password hash to reject
+    already-used tokens."""
     serializer = _serializer()
+
+    def _unpack(payload):
+        if not isinstance(payload, dict):
+            return None, None
+        return payload.get("email"), payload.get("pwh")
+
     try:
-        email = serializer.loads(token, salt=PASSWORD_RESET_SALT, max_age=max_age)
-        return email, False
+        payload = serializer.loads(token, salt=PASSWORD_RESET_SALT, max_age=max_age)
+        email, pwh = _unpack(payload)
+        return email, pwh, False
     except SignatureExpired as e:
         try:
-            return serializer.load_payload(e.payload), True
+            email, pwh = _unpack(serializer.load_payload(e.payload))
+            return email, pwh, True
         except BadSignature:
-            return None, False
+            return None, None, False
     except BadSignature:
-        return None, False
+        return None, None, False

@@ -3,6 +3,9 @@ modules without triggering circular imports with app.main."""
 
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_wtf import CSRFProtect
+
+csrf = CSRFProtect()
 
 # Rate limiter for brute-force / abuse protection on sensitive endpoints
 # (login, register). Keyed by client IP by default.

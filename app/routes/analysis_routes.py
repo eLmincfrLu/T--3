@@ -2,6 +2,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 from flask_login import current_user, login_required
 
 from app.database.connection import db
+from app.extensions import csrf
 from app.models.search_history import SearchHistory
 from app.models.threat_analysis import ThreatAnalysis
 from app.services.threat_service import analyze_target
@@ -64,9 +65,9 @@ def result(analysis_id):
         return redirect(url_for("history.index"))
     return render_template("result.html", analysis=analysis, data=data)
 
-
 @analysis_bp.route("/api/analyze", methods=["POST"])
 @login_required
+@csrf.exempt
 def api_analyze():
     body = request.get_json(silent=True) or {}
     target_type = body.get("target_type", "ip")

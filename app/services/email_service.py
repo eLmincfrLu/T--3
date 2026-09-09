@@ -3,6 +3,7 @@
 import logging
 import os
 import sib_api_v3_sdk
+from markupsafe import escape
 from sib_api_v3_sdk.rest import ApiException
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,7 @@ def build_password_reset_email(link: str, heading: str, body: str, action_line: 
 
 def build_malicious_alert_email(link: str, heading: str, body: str, target_label: str, target: str,
                                  risk_label: str, risk_score: int, button_label: str) -> str:
+    safe_target = escape(target)
     return _brand_wrapper(f"""
         <div style="display: inline-block; background: #fee2e2; color: #b91c1c; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; margin-bottom: 12px;">
           {risk_label}
@@ -94,7 +96,7 @@ def build_malicious_alert_email(link: str, heading: str, body: str, target_label
         <p style="margin: 0 0 16px;">{body}</p>
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;">
           <div style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">{target_label}</div>
-          <div style="font-family: monospace; font-size: 14px; color: #0f172a; word-break: break-all; margin-bottom: 10px;">{target}</div>
+          <div style="font-family: monospace; font-size: 14px; color: #0f172a; word-break: break-all; margin-bottom: 10px;">{safe_target}</div>
           <div style="font-size: 12px; color: #64748b;">{risk_label}: <strong style="color: #b91c1c;">{risk_score}/100</strong></div>
         </div>
         <div style="text-align: center;">

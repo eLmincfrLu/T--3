@@ -22,6 +22,15 @@ FONTS_DIR = Path(__file__).resolve().parent.parent / "static" / "fonts"
 FONT_REGULAR = FONTS_DIR / "DejaVuSans.ttf"
 FONT_BOLD = FONTS_DIR / "DejaVuSans-Bold.ttf"
 
+_FORMULA_LEAD_CHARS = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe(value) -> str:
+    text = "" if value is None else str(value)
+    if text.startswith(_FORMULA_LEAD_CHARS):
+        return "'" + text
+    return text
+
 
 @report_bp.route("/reports")
 @login_required
@@ -54,7 +63,8 @@ def save_report(analysis_id):
 def export_csv():
     locale = resolve_locale()
     analyses = (
-        ThreatAnalysis.query.filter_by(user_id=current_user.id)
+        ThreatAnalysis.query.join(Report, Report.analysis_id == ThreatAnalysis.id)
+        .filter(ThreatAnalysis.user_id == current_user.id)
         .order_by(ThreatAnalysis.created_at.desc())
         .all()
     )
@@ -79,7 +89,7 @@ def export_csv():
     )
     for a in analyses:
         writer.writerow(
-            [a.target, a.type, a.risk_score, a.status, a.country or "", utc_iso(a.created_at)]
+            [_csv_safe(a.target), _csv_safe(a.type), a.risk_score, _csv_safe(a.status), _csv_safe(a.country or ""), utc_iso(a.created_at)]
         )
     return Response(
         output.getvalue().encode("utf-8"),

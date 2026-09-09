@@ -4,10 +4,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, request, url_for
 from flask_login import LoginManager
+from flask_session import Session
 
 from app.database.connection import db, init_db, run_lightweight_migrations
-from app.extensions import limiter
+from app.extensions import limiter, csrf
 from app.models.user import User
+from app.utils.helpers import safe_next
 from app.routes.analysis_routes import analysis_bp
 from app.routes.auth_routes import auth_bp
 from app.routes.dashboard_routes import dashboard_bp
@@ -31,6 +33,23 @@ def create_app():
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
     init_db(app)
 
+    is_production = bool(os.getenv("DATABASE_URL"))
+
+    app.config["SESSION_COOKIE_SECURE"] = is_production
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["REMEMBER_COOKIE_SECURE"] = is_production
+    app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
+    app.config["REMEMBER_COOKIE_HTTPONLY"] = True
+
+    app.config["SESSION_TYPE"] = os.getenv("SESSION_TYPE", "filesystem")
+    app.config["SESSION_FILE_DIR"] = str(Path(app.instance_path) / "flask_session")
+    app.config["SESSION_PERMANENT"] = False
+    app.config["SESSION_USE_SIGNER"] = True
+    Session(app)
+
+    csrf.init_app(app)
+
     app.config["RATELIMIT_STORAGE_URI"] = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
     limiter.init_app(app)
 
@@ -53,7 +72,24 @@ def create_app():
     def ratelimit_handler(_e):
         locale = resolve_locale()
         flash(translate(locale, "auth.rate_limited"), "danger")
-        return redirect(request.referrer or url_for("auth.login"))
+        return redirect(safe_next(request.referrer) or url_for("auth.login"))
+
+    @app.after_request
+    def set_security_headers(response):
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+            "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+            "img-src 'self' data:; "
+            "frame-ancestors 'none'"
+        )
+        if is_production:
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
 
     @app.context_processor
     def inject_globals():

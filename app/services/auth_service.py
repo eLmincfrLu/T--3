@@ -140,7 +140,7 @@ def send_password_reset_email(user: User, locale: str) -> tuple[EmailResult, str
     """Generates a fresh password-reset token/link and emails it to the user.
     Mirrors send_verification_email: uses APP_URL from environment if defined
     so the link works from another device/email client, not just localhost."""
-    token = generate_password_reset_token(user.email)
+    token = generate_password_reset_token(user.email, user.password_hash)
 
     app_url = os.getenv("APP_URL")
     if app_url:
@@ -161,12 +161,16 @@ def send_password_reset_email(user: User, locale: str) -> tuple[EmailResult, str
 
 
 def resolve_password_reset_token(token: str) -> tuple[User | None, bool]:
-    """Returns (user, expired). user is None if the token is invalid/tampered
-    or no longer matches an existing account."""
-    email, expired = verify_password_reset_token(token)
+    """Returns (user, expired). user is None əgər token etibarsızdırsa,
+    tampered-dirsə, ya da artıq İSTİFADƏ OLUNUBSA (parol dəyişib)."""
+    email, pwh, expired = verify_password_reset_token(token)
     if not email:
         return None, False
     user = User.query.filter_by(email=email).first()
+    if not user:
+        return None, False
+    if pwh != user.password_hash[-16:]:
+        return None, False
     return user, expired
 
 

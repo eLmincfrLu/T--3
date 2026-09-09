@@ -67,6 +67,35 @@ def validate_password(value: str) -> tuple[bool, list[str]]:
     return len(errors) == 0, errors
 
 
+_BLOCKED_HOSTNAMES = {"localhost", "localhost.localdomain", "ip6-localhost"}
+
+
+def _is_blocked_host(host: str) -> bool:
+    host = (host or "").strip().lower().strip("[]")
+    if not host:
+        return False
+    if host in _BLOCKED_HOSTNAMES or host.endswith(".localhost"):
+        return True
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return (
+        ip.is_loopback or ip.is_private or ip.is_link_local
+        or ip.is_reserved or ip.is_multicast or ip.is_unspecified
+    )
+
+
+def is_blocked_target(value: str, target_type: str) -> bool:
+    if target_type == "ip":
+        return _is_blocked_host(value)
+    if target_type == "url":
+        return _is_blocked_host(urlparse(value).hostname or "")
+    if target_type == "domain":
+        return _is_blocked_host(value)
+    return False
+
+
 def validate_target(value: str, expected_type: str | None = None) -> tuple[bool, str, str | None]:
     value = (value or "").strip()
     if not value:
@@ -76,4 +105,7 @@ def validate_target(value: str, expected_type: str | None = None) -> tuple[bool,
         return False, "validation.invalid_target", None
     if expected_type and detected != expected_type:
         return False, "validation.type_mismatch", None
-    return True, normalize_target(value, detected), detected
+    normalized = normalize_target(value, detected)
+    if is_blocked_target(normalized, detected):
+        return False, "validation.private_target_blocked", None
+    return True, normalized, detected

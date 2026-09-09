@@ -46,6 +46,7 @@
         </div>
       </div>
       <form method="post" action="{{ url_for('dashboard.twofa_setup') }}" class="mt-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
           <label class="form-label" for="code">{{ t('twofa.code_label') }}</label>
           <input type="text" class="form-control" id="code" name="code" placeholder="123456" inputmode="numeric" maxlength="6" autofocus required>

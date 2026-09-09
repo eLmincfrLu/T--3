@@ -16,6 +16,7 @@ from app.services.auth_service import (
     send_verification_email,
 )
 from app.services.twofa_service import verify_2fa_code
+from app.utils.helpers import safe_next
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -48,12 +49,12 @@ def login():
                 # login_user() only happens after verify_2fa_code() succeeds.
                 session["pending_2fa_user_id"] = user.id
                 session["pending_2fa_remember"] = remember
-                next_url = request.args.get("next")
+                next_url = safe_next(request.args.get("next"))
                 if next_url:
                     session["pending_2fa_next"] = next_url
                 return redirect(url_for("auth.login_2fa"))
             login_user(user, remember=remember)
-            next_url = request.args.get("next")
+            next_url = safe_next(request.args.get("next"))
             return redirect(next_url or url_for("dashboard.index"))
         flash(translate(locale, "login.invalid_credentials"), "danger")
     return render_template("login.html")
@@ -192,7 +193,7 @@ def login_2fa():
         code = request.form.get("code", "")
         if verify_2fa_code(user, code):
             remember = session.pop("pending_2fa_remember", False)
-            next_url = session.pop("pending_2fa_next", None)
+            next_url = safe_next(session.pop("pending_2fa_next", None))
             session.pop("pending_2fa_user_id", None)
             login_user(user, remember=remember)
             return redirect(next_url or url_for("dashboard.index"))
@@ -204,14 +205,19 @@ def login_2fa():
 def set_language(lang):
     if lang not in SUPPORTED_LOCALES:
         lang = DEFAULT_LOCALE
-    next_url = request.args.get("next") or request.referrer or url_for("auth.login")
+    next_url = (
+        safe_next(request.args.get("next"))
+        or safe_next(request.referrer)
+        or url_for("auth.login")
+    )
     response = redirect(next_url)
     response.set_cookie("lang", lang, max_age=365 * 24 * 3600, samesite="Lax")
     return response
 
 
-@auth_bp.route("/logout")
+@auth_bp.route("/logout", methods=["POST"])
 @login_required
 def logout():
     logout_user()
+    session.clear()
     return redirect(url_for("auth.login"))

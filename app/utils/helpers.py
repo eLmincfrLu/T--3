@@ -1,5 +1,22 @@
 import json
 from datetime import datetime, timezone
+from urllib.parse import urlparse
+
+from flask import request
+
+
+def safe_next(target: str | None) -> str | None:
+    if not target:
+        return None
+    target = target.strip()
+    if target.startswith("//") or "\\" in target:
+        return None
+    parsed = urlparse(target)
+    if parsed.netloc and parsed.netloc != request.host:
+        return None
+    if parsed.scheme and parsed.scheme not in ("http", "https", ""):
+        return None
+    return target
 
 
 def utc_iso(dt: datetime | None) -> str:

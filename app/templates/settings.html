@@ -74,7 +74,7 @@ let notifyHintTimer = null;
 function saveNotificationSetting(key, value) {
   fetch('{{ url_for("dashboard.update_notification_settings") }}', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
     body: JSON.stringify({ [key]: value }),
   })
     .then((r) => r.json())

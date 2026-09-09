@@ -15,6 +15,7 @@
     <div class="panel-card analysis-card">
       <p class="text-muted mb-4">{{ t('analysis.description') }}</p>
       <form method="post" action="{{ url_for('analysis.analyze_page') }}" id="analysisForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="type-selector mb-4" role="radiogroup" aria-label="Target type">
           <label class="type-option">
             <input type="radio" name="target_type" value="ip" checked>

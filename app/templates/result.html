@@ -9,6 +9,7 @@
 
 {% block topbar_actions %}
 <form method="post" action="{{ url_for('reports.save_report', analysis_id=analysis.id) }}" class="d-inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <button type="submit" class="btn btn-sm btn-outline-light">{{ t('result.save_report') }}</button>
 </form>
 <a href="{{ url_for('reports.export_pdf', analysis_id=analysis.id) }}" class="btn btn-sm btn-primary">{{ t('result.download_pdf') }}</a>
