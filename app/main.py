@@ -50,6 +50,15 @@ def create_app():
 
     csrf.init_app(app)
 
+    @app.url_defaults
+    def add_static_version(endpoint, values):
+        if endpoint == "static" and "filename" in values:
+            file_path = os.path.join(app.static_folder, values["filename"])
+            try:
+                values["v"] = int(os.path.getmtime(file_path))
+            except OSError:
+                pass
+
     app.config["RATELIMIT_STORAGE_URI"] = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
     limiter.init_app(app)
 
