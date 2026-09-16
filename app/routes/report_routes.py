@@ -77,16 +77,17 @@ def export_csv():
     import csv
 
     writer = csv.writer(output)
-    writer.writerow(
-        [
-            translate(locale, "common.target"),
-            translate(locale, "common.type"),
-            translate(locale, "result.risk_score"),
-            translate(locale, "common.status"),
-            translate(locale, "result.country"),
-            translate(locale, "common.date"),
-        ]
-    )
+    writer.writerow([
+    translate(locale, "common.target"), translate(locale, "common.type"),
+    translate(locale, "result.risk_score"), translate(locale, "common.status"),
+    translate(locale, "result.country"), translate(locale, "result.isp"),
+    translate(locale, "result.asn"), translate(locale, "result.hostname"),
+    translate(locale, "result.registrar"), translate(locale, "result.categories"),
+    translate(locale, "result.virustotal"), translate(locale, "result.blacklist"),
+    translate(locale, "result.malware"), translate(locale, "result.phishing"),
+    translate(locale, "result.spam"), translate(locale, "result.recommendations"),
+    translate(locale, "common.date"),
+    ])
     for a in analyses:
         writer.writerow(
             [_csv_safe(a.target), _csv_safe(a.type), a.risk_score, _csv_safe(a.status), _csv_safe(a.country or ""), utc_iso(a.created_at)]
