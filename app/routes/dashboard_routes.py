@@ -15,8 +15,12 @@ from app.utils.security import verify_password
 dashboard_bp = Blueprint("dashboard", __name__)
 
 
-def _stats():
-    analyses = ThreatAnalysis.query.filter_by(user_id=current_user.id).all()
+def _stats(user_id, days=None):
+    query = ThreatAnalysis.query.filter_by(user_id=user_id)
+    if days:
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+        query = query.filter(ThreatAnalysis.created_at >= since)
+    analyses = query.all()
     total = len(analyses)
     safe = sum(1 for a in analyses if a.risk_score <= 30)
     suspicious = sum(1 for a in analyses if 31 <= a.risk_score <= 70)

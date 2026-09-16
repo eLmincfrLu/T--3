@@ -88,16 +88,23 @@ def export_csv():
     translate(locale, "result.spam"), translate(locale, "result.recommendations"),
     translate(locale, "common.date"),
     ])
-    for a in analyses:
-        writer.writerow(
-            [_csv_safe(a.target), _csv_safe(a.type), a.risk_score, _csv_safe(a.status), _csv_safe(a.country or ""), utc_iso(a.created_at)]
-        )
-    return Response(
-        output.getvalue().encode("utf-8"),
-        mimetype="text/csv; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=threat_analyses.csv"},
-    )
 
+    for a in analyses:
+        data = deserialize_payload(a.payload)
+        whois = data.get("whois") or {}
+        rep = data.get("reputation") or {}
+        rec_code = data.get("recommendation")
+        rec_text = translate(locale, f"result.recommendation.{rec_code.lower()}") if rec_code else ""
+        categories = ", ".join(data.get("threat_categories") or [])
+        writer.writerow([
+            _csv_safe(a.target), _csv_safe(a.type), a.risk_score, _csv_safe(a.status),
+            _csv_safe(a.country or ""), _csv_safe(data.get("isp") or ""),
+            _csv_safe(data.get("asn") or ""), _csv_safe(data.get("hostname") or ""),
+            _csv_safe(whois.get("registrar") or ""), _csv_safe(categories),
+            _csv_safe(rep.get("virustotal_status") or ""), _csv_safe(rep.get("blacklist_status") or ""),
+            _csv_safe(rep.get("malware_detection") or ""), _csv_safe(rep.get("phishing_detection") or ""),
+            _csv_safe(rep.get("spam_detection") or ""), _csv_safe(rec_text), utc_iso(a.created_at),
+    ])
 
 def _status_rgb(status: str) -> tuple[int, int, int]:
     s = (status or "").upper()

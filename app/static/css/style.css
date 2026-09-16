@@ -554,3 +554,19 @@ input[type="password"]::-ms-clear {
   color: var(--text);
   letter-spacing: 0.03em;
 }
+
+.btn-outline-light {
+  --bs-btn-color: var(--text);
+  --bs-btn-border-color: var(--border);
+  --bs-btn-hover-color: var(--text);
+  --bs-btn-hover-bg: var(--soft-bg);
+  --bs-btn-hover-border-color: var(--muted);
+  --bs-btn-active-color: var(--text);
+  --bs-btn-active-bg: var(--soft-bg);
+  --bs-btn-active-border-color: var(--muted);
+  --bs-btn-disabled-color: var(--muted);
+  --bs-btn-disabled-border-color: var(--border);
+}
+
+.form-control::placeholder { color: var(--muted); opacity: 1; }
+.form-text { color: var(--muted) !important; }
