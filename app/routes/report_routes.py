@@ -222,13 +222,21 @@ def _build_pdf(analysis: ThreatAnalysis, data: dict, locale: str) -> bytes:
         pdf.ln(2)
         pdf.set_font(font, "", 10)
         pdf.set_text_color(30, 41, 59)
+        label_col_width = 62
+        value_col_width = 124
         for label, value in rows:
             pdf.set_x(12)
             if label:
-                pdf.set_font(font, "B", 10)
-                pdf.cell(45, 6, label)
+                label_size = 10
+                pdf.set_font(font, "B", label_size)
+                while label_size > 7 and pdf.get_string_width(label) > label_col_width - 2:
+                    label_size -= 1
+                    pdf.set_font(font, "B", label_size)
+                label_y = pdf.get_y()
+                pdf.multi_cell(label_col_width, 6, label)
+                pdf.set_xy(12 + label_col_width, label_y)
                 pdf.set_font(font, "", 10)
-                pdf.multi_cell(141, 6, str(value) if value not in (None, "") else unknown)
+                pdf.multi_cell(value_col_width, 6, str(value) if value not in (None, "") else unknown)
             else:
                 pdf.multi_cell(186, 6, str(value) if value not in (None, "") else unknown)
         pdf.ln(3)
