@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, request, url_for
-from flask_login import LoginManager
+from flask import Flask, flash, redirect, request, session, url_for
+from flask_login import LoginManager, current_user, logout_user
 from flask_session import Session
 
 from app.database.connection import db, init_db, run_lightweight_migrations
@@ -17,6 +17,7 @@ from app.routes.history_routes import history_bp
 from app.routes.report_routes import report_bp
 from app.routes.threat_actors_routes import threat_actors_bp
 from app.routes.cve_routes import cve_bp
+from app.routes.admin_routes import admin_bp
 from app.i18n import LOCALE_LABELS, SUPPORTED_LOCALES, resolve_locale, translate
 from app.services.auth_service import ensure_demo_user
 from app.services.scheduler_service import init_scheduler
@@ -61,6 +62,16 @@ def create_app():
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
+    @app.before_request
+    def enforce_active_account():
+        # Admin tərəfindən deaktiv edilən hesabın aktiv sessiyası bu hook
+        # olmadan işləməyə davam edərdi — bu boşluğu bağlayır.
+        if current_user.is_authenticated and not current_user.is_active:
+            logout_user()
+            session.clear()
+            flash(translate(resolve_locale(), "admin.account_disabled"), "danger")
+            return redirect(url_for("auth.login"))
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(analysis_bp)
@@ -68,6 +79,8 @@ def create_app():
     app.register_blueprint(report_bp)
     app.register_blueprint(threat_actors_bp)
     app.register_blueprint(cve_bp)
+    app.register_blueprint(admin_bp)
+
     @app.errorhandler(429)
     def ratelimit_handler(_e):
         locale = resolve_locale()

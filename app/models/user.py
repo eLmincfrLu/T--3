@@ -17,5 +17,7 @@ class User(UserMixin, db.Model):
     backup_codes = db.Column(db.Text, nullable=True)
     notify_malicious_email = db.Column(db.Boolean, nullable=False, default=True)
     notify_weekly_summary = db.Column(db.Boolean, nullable=False, default=True)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
 
     search_history = db.relationship("SearchHistory", back_populates="user", lazy="dynamic")

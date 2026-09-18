@@ -1,0 +1,19 @@
+from functools import wraps
+
+from flask import abort
+from flask_login import current_user
+
+
+def admin_required(view):
+    """current_user.is_admin olmayanlara 403 qaytarır.
+    Həmişə @login_required ilə birlikdə istifadə et."""
+
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not current_user.is_authenticated:
+            abort(401)
+        if not getattr(current_user, "is_admin", False):
+            abort(403)
+        return view(*args, **kwargs)
+
+    return wrapped

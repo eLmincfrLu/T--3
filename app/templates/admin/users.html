@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.users_heading') }} — {{ app_name }}{% endblock %}
+{% block page_heading %}{{ t('admin.users_heading') }}{% endblock %}
+
+{% block content %}
+<div class="panel-card mb-3">
+  <form class="row g-2" method="get" action="{{ url_for('admin.users') }}">
+    <div class="col-md-6">
+      <input type="search" name="q" class="form-control" value="{{ q }}" placeholder="{{ t('admin.search_placeholder') }}">
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">{{ t('common.filter') }}</button>
+    </div>
+  </form>
+</div>
+
+<div class="panel-card">
+  <div class="table-responsive">
+    <table class="table table-dark table-hover tip-table mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Email</th>
+          <th>{{ t('admin.role') }}</th>
+          <th>{{ t('admin.status') }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.id }}</td>
+          <td>
+            <a href="{{ url_for('admin.user_detail', user_id=u.id) }}">{{ u.email }}</a>
+          </td>
+          <td>
+            {% if u.is_admin %}<span class="badge badge-warning">{{ t('admin.role_admin') }}</span>
+            {% else %}<span class="badge badge-muted">{{ t('admin.role_user') }}</span>{% endif %}
+          </td>
+          <td>
+            {% if u.is_active %}<span class="badge badge-safe">{{ t('admin.status_active') }}</span>
+            {% else %}<span class="badge badge-danger">{{ t('admin.status_disabled') }}</span>{% endif %}
+          </td>
+          <td class="text-end">
+            {% if u.id != current_user.id %}
+            <form method="post" action="{{ url_for('admin.toggle_admin', user_id=u.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-light">
+                {{ t('admin.remove_admin') if u.is_admin else t('admin.make_admin') }}
+              </button>
+            </form>
+            <form method="post" action="{{ url_for('admin.toggle_active', user_id=u.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-light">
+                {{ t('admin.activate') if not u.is_active else t('admin.deactivate') }}
+              </button>
+            </form>
+            <form method="post" action="{{ url_for('admin.delete_user', user_id=u.id) }}" class="d-inline"
+                  onsubmit="return confirm('{{ t('admin.delete_confirm') }}');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger">{{ t('admin.delete') }}</button>
+            </form>
+            {% else %}
+            <span class="text-muted small">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

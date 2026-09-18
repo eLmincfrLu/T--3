@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.overview_heading') }} — {{ app_name }}{% endblock %}
+{% block page_heading %}{{ t('admin.overview_heading') }}{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-label">{{ t('admin.total_users') }}</div>
+      <div class="stat-value">{{ total_users }}</div>
+      <i class="bi bi-people stat-icon"></i>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card stat-warning">
+      <div class="stat-label">{{ t('admin.total_admins') }}</div>
+      <div class="stat-value">{{ total_admins }}</div>
+      <i class="bi bi-shield-lock stat-icon"></i>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card stat-danger">
+      <div class="stat-label">{{ t('admin.total_analyses') }}</div>
+      <div class="stat-value">{{ total_analyses }}</div>
+      <i class="bi bi-activity stat-icon"></i>
+    </div>
+  </div>
+</div>
+
+<div class="panel-card">
+  <h5 class="mb-3">{{ t('admin.recent_users') }}</h5>
+  <div class="table-responsive">
+    <table class="table table-dark table-hover tip-table mb-0">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>{{ t('admin.role') }}</th>
+          <th>{{ t('admin.status') }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in recent_users %}
+        <tr>
+          <td>{{ u.email }}</td>
+          <td>
+            {% if u.is_admin %}<span class="badge badge-warning">{{ t('admin.role_admin') }}</span>
+            {% else %}<span class="badge badge-muted">{{ t('admin.role_user') }}</span>{% endif %}
+          </td>
+          <td>
+            {% if u.is_active %}<span class="badge badge-safe">{{ t('admin.status_active') }}</span>
+            {% else %}<span class="badge badge-danger">{{ t('admin.status_disabled') }}</span>{% endif %}
+          </td>
+          <td><a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.user_detail', user_id=u.id) }}">{{ t('admin.view') }}</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-3">
+    <a href="{{ url_for('admin.users') }}" class="btn btn-primary">{{ t('admin.users_heading') }}</a>
+  </div>
+</div>
+{% endblock %}

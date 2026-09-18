@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ user.email }} — {{ app_name }}{% endblock %}
+{% block page_heading %}{{ user.email }}{% endblock %}
+
+{% block content %}
+<div class="panel-card mb-3">
+  <p><strong>{{ t('common.full_name') if t('common.full_name') != 'common.full_name' else 'Ad' }}:</strong> {{ user.full_name }}</p>
+  <p><strong>{{ t('admin.role') }}:</strong>
+    {% if user.is_admin %}<span class="badge badge-warning">{{ t('admin.role_admin') }}</span>
+    {% else %}<span class="badge badge-muted">{{ t('admin.role_user') }}</span>{% endif %}
+  </p>
+  <p><strong>{{ t('admin.status') }}:</strong>
+    {% if user.is_active %}<span class="badge badge-safe">{{ t('admin.status_active') }}</span>
+    {% else %}<span class="badge badge-danger">{{ t('admin.status_disabled') }}</span>{% endif %}
+  </p>
+  <p><strong>{{ t('common.total') if t('common.total') != 'common.total' else 'Analizlər' }}:</strong> {{ analyses_count }}</p>
+
+  {% if user.id != current_user.id %}
+  <div class="d-flex gap-2 mt-3">
+    <form method="post" action="{{ url_for('admin.toggle_admin', user_id=user.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-light">
+        {{ t('admin.remove_admin') if user.is_admin else t('admin.make_admin') }}
+      </button>
+    </form>
+    <form method="post" action="{{ url_for('admin.toggle_active', user_id=user.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-light">
+        {{ t('admin.activate') if not user.is_active else t('admin.deactivate') }}
+      </button>
+    </form>
+    <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}"
+          onsubmit="return confirm('{{ t('admin.delete_confirm') }}');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-danger">{{ t('admin.delete') }}</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+<a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-outline-light">{{ t('admin.back_to_users') }}</a>
+{% endblock %}

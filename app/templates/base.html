@@ -42,6 +42,11 @@
       <a class="nav-link {% if request.endpoint and 'cve_watchlist' in request.endpoint %}active{% endif %}" href="{{ url_for('cve_watchlist.index') }}">
         <i class="bi bi-bug"></i> {{ t('nav.cve_watchlist') }}
       </a>
+      {% if current_user.is_admin %}
+      <a class="nav-link {% if request.endpoint and 'admin' in request.endpoint %}active{% endif %}" href="{{ url_for('admin.overview') }}">
+        <i class="bi bi-shield-lock"></i> {{ t('nav.admin') }}
+      </a>
+      {% endif %}
       <a class="nav-link {% if request.endpoint in ('dashboard.settings', 'dashboard.profile', 'dashboard.change_password_page') %}active{% endif %}" href="{{ url_for('dashboard.settings') }}">
         <i class="bi bi-gear"></i> {{ t('nav.settings') }}
       </a>
