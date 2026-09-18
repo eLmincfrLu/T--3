@@ -77,26 +77,34 @@ def export_csv():
     import csv
 
     writer = csv.writer(output)
-    writer.writerow(
-        [
-            translate(locale, "common.target"),
-            translate(locale, "common.type"),
-            translate(locale, "result.risk_score"),
-            translate(locale, "common.status"),
-            translate(locale, "result.country"),
-            translate(locale, "common.date"),
-        ]
-    )
-    for a in analyses:
-        writer.writerow(
-            [_csv_safe(a.target), _csv_safe(a.type), a.risk_score, _csv_safe(a.status), _csv_safe(a.country or ""), utc_iso(a.created_at)]
-        )
-    return Response(
-        output.getvalue().encode("utf-8"),
-        mimetype="text/csv; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=threat_analyses.csv"},
-    )
+    writer.writerow([
+    translate(locale, "common.target"), translate(locale, "common.type"),
+    translate(locale, "result.risk_score"), translate(locale, "common.status"),
+    translate(locale, "result.country"), translate(locale, "result.isp"),
+    translate(locale, "result.asn"), translate(locale, "result.hostname"),
+    translate(locale, "result.registrar"), translate(locale, "result.categories"),
+    translate(locale, "result.virustotal"), translate(locale, "result.blacklist"),
+    translate(locale, "result.malware"), translate(locale, "result.phishing"),
+    translate(locale, "result.spam"), translate(locale, "result.recommendations"),
+    translate(locale, "common.date"),
+    ])
 
+    for a in analyses:
+        data = deserialize_payload(a.payload)
+        whois = data.get("whois") or {}
+        rep = data.get("reputation") or {}
+        rec_code = data.get("recommendation")
+        rec_text = translate(locale, f"result.recommendation.{rec_code.lower()}") if rec_code else ""
+        categories = ", ".join(data.get("threat_categories") or [])
+        writer.writerow([
+            _csv_safe(a.target), _csv_safe(a.type), a.risk_score, _csv_safe(a.status),
+            _csv_safe(a.country or ""), _csv_safe(data.get("isp") or ""),
+            _csv_safe(data.get("asn") or ""), _csv_safe(data.get("hostname") or ""),
+            _csv_safe(whois.get("registrar") or ""), _csv_safe(categories),
+            _csv_safe(rep.get("virustotal_status") or ""), _csv_safe(rep.get("blacklist_status") or ""),
+            _csv_safe(rep.get("malware_detection") or ""), _csv_safe(rep.get("phishing_detection") or ""),
+            _csv_safe(rep.get("spam_detection") or ""), _csv_safe(rec_text), utc_iso(a.created_at),
+    ])
 
 def _status_rgb(status: str) -> tuple[int, int, int]:
     s = (status or "").upper()
@@ -222,13 +230,21 @@ def _build_pdf(analysis: ThreatAnalysis, data: dict, locale: str) -> bytes:
         pdf.ln(2)
         pdf.set_font(font, "", 10)
         pdf.set_text_color(30, 41, 59)
+        label_col_width = 62
+        value_col_width = 124
         for label, value in rows:
             pdf.set_x(12)
             if label:
-                pdf.set_font(font, "B", 10)
-                pdf.cell(45, 6, label)
+                label_size = 10
+                pdf.set_font(font, "B", label_size)
+                while label_size > 7 and pdf.get_string_width(label) > label_col_width - 2:
+                    label_size -= 1
+                    pdf.set_font(font, "B", label_size)
+                label_y = pdf.get_y()
+                pdf.multi_cell(label_col_width, 6, label)
+                pdf.set_xy(12 + label_col_width, label_y)
                 pdf.set_font(font, "", 10)
-                pdf.multi_cell(141, 6, str(value) if value not in (None, "") else unknown)
+                pdf.multi_cell(value_col_width, 6, str(value) if value not in (None, "") else unknown)
             else:
                 pdf.multi_cell(186, 6, str(value) if value not in (None, "") else unknown)
         pdf.ln(3)

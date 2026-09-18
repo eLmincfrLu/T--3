@@ -15,8 +15,12 @@ from app.utils.security import verify_password
 dashboard_bp = Blueprint("dashboard", __name__)
 
 
-def _stats():
-    analyses = ThreatAnalysis.query.filter_by(user_id=current_user.id).all()
+def _stats(user_id, days=None):
+    query = ThreatAnalysis.query.filter_by(user_id=user_id)
+    if days:
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+        query = query.filter(ThreatAnalysis.created_at >= since)
+    analyses = query.all()
     total = len(analyses)
     safe = sum(1 for a in analyses if a.risk_score <= 30)
     suspicious = sum(1 for a in analyses if 31 <= a.risk_score <= 70)
@@ -24,15 +28,17 @@ def _stats():
     return total, safe, suspicious, malicious
 
 
-def _country_distribution(user_id, limit=5):
+def _country_distribution(user_id, limit=5, days=None):
+    query = db.session.query(ThreatAnalysis.country, db.func.count(ThreatAnalysis.id)).filter(
+        ThreatAnalysis.user_id == user_id,
+        ThreatAnalysis.country.isnot(None),
+        ThreatAnalysis.country != "",
+    )
+    if days:
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+        query = query.filter(ThreatAnalysis.created_at >= since)
     rows = (
-        db.session.query(ThreatAnalysis.country, db.func.count(ThreatAnalysis.id))
-        .filter(
-            ThreatAnalysis.user_id == user_id,
-            ThreatAnalysis.country.isnot(None),
-            ThreatAnalysis.country != "",
-        )
-        .group_by(ThreatAnalysis.country)
+        query.group_by(ThreatAnalysis.country)
         .order_by(db.func.count(ThreatAnalysis.id).desc())
         .limit(limit)
         .all()
@@ -71,9 +77,16 @@ def _daily_activity(user_id, days=14):
 @dashboard_bp.route("/dashboard")
 @login_required
 def index():
-    total, safe, suspicious, malicious = _stats()
+    selected_days = request.args.get("days", 14, type=int)
+    if selected_days not in (1, 7, 14, 30):
+        selected_days = 14
+
+    total, safe, suspicious, malicious = _stats(current_user.id, days=selected_days)
+
+    since = datetime.now(timezone.utc) - timedelta(days=selected_days)
     recent = (
         ThreatAnalysis.query.filter_by(user_id=current_user.id)
+        .filter(ThreatAnalysis.created_at >= since)
         .order_by(ThreatAnalysis.created_at.desc())
         .limit(8)
         .all()
@@ -91,17 +104,13 @@ def index():
     ]
     alerts = [r for r in recent_searches if r["status"] in ("SUSPICIOUS", "MALICIOUS")][:5]
 
-    selected_days = request.args.get("days", 14, type=int)
-    if selected_days not in (1, 7, 14, 30):
-        selected_days = 14
-
     return render_template(
         "dashboard.html",
         stats={"total": total, "safe": safe, "suspicious": suspicious, "malicious": malicious},
         recent_searches=recent_searches,
         recent_alerts=alerts,
         risk_distribution={"safe": safe, "suspicious": suspicious, "malicious": malicious},
-        country_distribution=_country_distribution(current_user.id),
+        country_distribution=_country_distribution(current_user.id, days=selected_days),
         selected_days=selected_days,
     )
 
@@ -109,7 +118,11 @@ def index():
 @dashboard_bp.route("/api/dashboard/summary")
 @login_required
 def api_summary():
-    total, safe, suspicious, malicious = _stats()
+    days = request.args.get("days", 14, type=int)
+    if days not in (1, 7, 14, 30):
+        days = 14
+
+    total, safe, suspicious, malicious = _stats(current_user.id, days=days)
     recent = (
         ThreatAnalysis.query.filter_by(user_id=current_user.id)
         .order_by(ThreatAnalysis.created_at.desc())
@@ -126,10 +139,6 @@ def api_summary():
                 categories[cat] += 1
     top_categories = [{"name": k, "count": v} for k, v in categories.most_common(5)]
 
-    days = request.args.get("days", 14, type=int)
-    if days not in (1, 7, 14, 30):
-        days = 14
-
     return jsonify(
         {
             "stats": {
@@ -139,7 +148,7 @@ def api_summary():
                 "malicious": malicious,
             },
             "top_categories": top_categories,
-            "country_distribution": _country_distribution(current_user.id),
+            "country_distribution": _country_distribution(current_user.id, days=days),
             "daily_activity": _daily_activity(current_user.id, days=days),
         }
     )
@@ -216,8 +225,6 @@ def twofa_setup():
         code = request.form.get("code", "")
         backup_codes = confirm_2fa_setup(current_user, code)
         if backup_codes:
-            # Shown exactly once — stashed in the session and popped by
-            # twofa_backup_codes() the moment that page is rendered.
             session["new_backup_codes"] = backup_codes
             flash(translate(locale, "twofa.enabled_success"), "success")
             return redirect(url_for("dashboard.twofa_backup_codes"))
