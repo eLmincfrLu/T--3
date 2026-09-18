@@ -39,10 +39,10 @@ def run_lightweight_migrations():
         return
     existing_columns = {col["name"] for col in inspector.get_columns("users")}
     missing_bool_columns = {
-        "notify_malicious_email": "1",
-        "notify_weekly_summary": "1",
-        "is_admin": "0",
-        "is_active": "1",
+        "notify_malicious_email": "TRUE",
+        "notify_weekly_summary": "TRUE",
+        "is_admin": "FALSE",
+        "is_active": "TRUE",
     }
     for column_name, default_sql in missing_bool_columns.items():
         if column_name not in existing_columns:
