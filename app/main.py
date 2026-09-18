@@ -81,6 +81,23 @@ def create_app():
             flash(translate(resolve_locale(), "admin.account_disabled"), "danger")
             return redirect(url_for("auth.login"))
 
+    # Admin hesabı YALNIZ idarəetmə üçündür — platformanın adi
+    # funksiyalarından (dashboard, analiz, tarixçə, hesabat və s.) istifadə
+    # edə bilməz. Bu route-lara birbaşa URL yazaraq da girməyə cəhd etsə,
+    # avtomatik admin panelə yönləndirilir.
+    ADMIN_ALLOWED_ENDPOINT_PREFIXES = ("admin.", "auth.logout", "auth.set_language")
+
+    @app.before_request
+    def restrict_admin_to_admin_panel():
+        if (
+            current_user.is_authenticated
+            and current_user.is_admin
+            and request.endpoint
+            and request.endpoint != "static"
+            and not request.endpoint.startswith(ADMIN_ALLOWED_ENDPOINT_PREFIXES)
+        ):
+            return redirect(url_for("admin.overview"))
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(analysis_bp)

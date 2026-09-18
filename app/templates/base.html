@@ -24,6 +24,7 @@
       </div>
     </div>
     <nav class="sidebar-nav">
+      {% if not current_user.is_admin %}
       <a class="nav-link {% if request.endpoint and 'dashboard' in request.endpoint %}active{% endif %}" href="{{ url_for('dashboard.index') }}">
         <i class="bi bi-speedometer2"></i> {{ t('nav.dashboard') }}
       </a>
@@ -42,14 +43,17 @@
       <a class="nav-link {% if request.endpoint and 'cve_watchlist' in request.endpoint %}active{% endif %}" href="{{ url_for('cve_watchlist.index') }}">
         <i class="bi bi-bug"></i> {{ t('nav.cve_watchlist') }}
       </a>
+      {% endif %}
       {% if current_user.is_admin %}
       <a class="nav-link {% if request.endpoint and 'admin' in request.endpoint %}active{% endif %}" href="{{ url_for('admin.overview') }}">
         <i class="bi bi-shield-lock"></i> {{ t('nav.admin') }}
       </a>
       {% endif %}
+      {% if not current_user.is_admin %}
       <a class="nav-link {% if request.endpoint in ('dashboard.settings', 'dashboard.profile', 'dashboard.change_password_page') %}active{% endif %}" href="{{ url_for('dashboard.settings') }}">
         <i class="bi bi-gear"></i> {{ t('nav.settings') }}
       </a>
+      {% endif %}
     </nav>
     <div class="sidebar-footer">
       <div class="dropup user-menu">
@@ -59,12 +63,14 @@
           <i class="bi bi-chevron-up user-menu-caret ms-auto"></i>
         </button>
         <ul class="dropdown-menu dropdown-menu-dark user-menu-dropdown" aria-labelledby="userMenuToggle">
+          {% if not current_user.is_admin %}
           <li><a class="dropdown-item" href="{{ url_for('dashboard.profile') }}"><i class="bi bi-person-badge me-2"></i>{{ t('nav.my_profile') }}</a></li>
           <li><a class="dropdown-item" href="{{ url_for('dashboard.settings') }}"><i class="bi bi-gear me-2"></i>{{ t('nav.settings') }}</a></li>
           <li><a class="dropdown-item" href="{{ url_for('reports.index') }}"><i class="bi bi-file-earmark-bar-graph me-2"></i>{{ t('nav.reports') }}</a></li>
           <li><hr class="dropdown-divider"></li>
           <li><a class="dropdown-item" href="{{ url_for('dashboard.change_password_page') }}"><i class="bi bi-shield-lock me-2"></i>{{ t('settings.change_password') }}</a></li>
           <li><hr class="dropdown-divider"></li>
+          {% endif %}
           <li>
             <form method="post" action="{{ url_for('auth.logout') }}" class="m-0">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
