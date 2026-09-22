@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask, flash, redirect, request, session, url_for
 from flask_login import LoginManager, current_user, logout_user
 from flask_session import Session
+from flask_wtf.csrf import CSRFError
 
 from app.database.connection import db, init_db, run_lightweight_migrations
 from app.extensions import limiter, csrf
@@ -50,6 +51,17 @@ def create_app():
     Session(app)
 
     csrf.init_app(app)
+    # Default 1 saatdır — admin panelin uzun müddət açıq qalan
+    # tab-larında token vaxtının bitməsinin qarşısını alır.
+    app.config["WTF_CSRF_TIME_LIMIT"] = None
+
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        flash(
+            "Sessiyanın vaxtı bitib, zəhmət olmasa yenidən cəhd edin.",
+            "warning",
+        )
+        return redirect(request.referrer or url_for("auth.login"))
 
     @app.url_defaults
     def add_static_version(endpoint, values):
