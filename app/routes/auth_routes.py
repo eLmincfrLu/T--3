@@ -40,6 +40,9 @@ def login():
         locale = resolve_locale()
         user = authenticate(email, password)
         if user:
+            if not user.is_active:
+                flash(translate(locale, "admin.account_disabled"), "danger")
+                return redirect(url_for("auth.login"))
             if not user.email_verified:
                 flash(translate(locale, "login.email_not_verified"), "warning")
                 return redirect(url_for("auth.verify_pending", email=user.email))
@@ -192,6 +195,12 @@ def login_2fa():
     if request.method == "POST":
         code = request.form.get("code", "")
         if verify_2fa_code(user, code):
+            if not user.is_active:
+                session.pop("pending_2fa_user_id", None)
+                session.pop("pending_2fa_remember", None)
+                session.pop("pending_2fa_next", None)
+                flash(translate(locale, "admin.account_disabled"), "danger")
+                return redirect(url_for("auth.login"))
             remember = session.pop("pending_2fa_remember", False)
             next_url = safe_next(session.pop("pending_2fa_next", None))
             session.pop("pending_2fa_user_id", None)
